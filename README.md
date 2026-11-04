@@ -22,7 +22,7 @@ Pour activer les comptes :
 
 1. Dans le projet Supabase **immolia** (vérifier le nom en haut à gauche), ouvrir **SQL Editor** et exécuter
    `supabase/migrations/0001_schema_initial.sql`.
-2. Copier `.env.example` en `.env.local` et y mettre la Project URL et la clé `anon` (Project Settings > API).
+2. Copier `.env.example` en `.env.local` et y mettre l'URL et la clé publique (bouton « Connect » > App Frameworks > Next.js).
 3. Relancer `npm run dev`. L'espace `/app` demande alors une connexion.
 
 ## Organisation du code
