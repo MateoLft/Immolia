@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -30,11 +31,17 @@ export async function signUp(_prev: AuthState, form: FormData): Promise<AuthStat
   if (!fullName || !agencyName || !email) return { error: "Merci de remplir tous les champs." };
   if (password.length < 8) return { error: "Le mot de passe doit contenir au moins 8 caractères." };
 
+  const h = await headers();
+  const origin = h.get("origin") ?? `https://${h.get("host")}`;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, agency_name: agencyName } },
+    options: {
+      data: { full_name: fullName, agency_name: agencyName },
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
   });
 
   if (error) {
