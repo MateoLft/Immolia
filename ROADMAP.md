@@ -14,8 +14,10 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Mise en page de l'espace agent (menu latéral, menu mobile) | ✅ |
 | Offres et tarifs centralisés (`src/lib/plans.ts`) | ✅ |
 | Liste des modules centralisée (`src/lib/modules.ts`) | ✅ |
-| Base de données Supabase (agences, utilisateurs, biens, visites, acquéreurs) | ⬜ |
-| Comptes : inscription, connexion, mot de passe oublié (Supabase Auth) | 🟡 écrans prêts |
+| Base de données Supabase (agences, utilisateurs, biens, visites, acquéreurs) | 🟡 schéma prêt, à exécuter dans Supabase |
+| Comptes : inscription, connexion, déconnexion (Supabase Auth) | 🟡 codé, à activer avec les clés |
+| Mot de passe oublié | ⬜ |
+| Brancher le tableau de bord et les biens sur la base (fin des données d'exemple) | ⬜ |
 | Abonnements Stripe (essai 14 jours, mensuel / annuel, portail client) | ⬜ |
 | Accès aux modules selon l'offre souscrite | ⬜ |
 | Prise en main guidée (premier bien, logo, couleurs) | ⬜ |

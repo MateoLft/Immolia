@@ -11,6 +11,7 @@ import {
   FileCheck2,
   FolderOpen,
   LayoutDashboard,
+  LogOut,
   Menu,
   X,
   Settings,
@@ -25,6 +26,7 @@ import { Logo } from "@/components/logo";
 import { MODULES } from "@/lib/modules";
 import { CURRENT_USER } from "@/lib/mock-data";
 import { PLANS } from "@/lib/plans";
+import { signOut } from "@/app/(auth)/actions";
 
 const ICONS: Record<string, LucideIcon> = {
   biens: Building2,
@@ -136,6 +138,11 @@ export function Sidebar() {
             <span className="block text-sm font-semibold">{CURRENT_USER.fullName}</span>
             <span className="block text-[13px] text-muted">{CURRENT_USER.agency}</span>
           </span>
+          <form action={signOut} className="ml-auto">
+            <button type="submit" aria-label="Se déconnecter" title="Se déconnecter" className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-ink">
+              <LogOut aria-hidden className="size-[18px]" strokeWidth={1.8} />
+            </button>
+          </form>
         </div>
       </div>
       </div>
