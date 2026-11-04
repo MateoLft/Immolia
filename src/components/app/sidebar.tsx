@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { MODULES } from "@/lib/modules";
-import { CURRENT_USER } from "@/lib/mock-data";
+import type { Account } from "@/lib/property-types";
 import { PLANS } from "@/lib/plans";
 import { signOut } from "@/app/(auth)/actions";
 
@@ -60,8 +60,9 @@ function NavLink({ href, icon: Icon, label, exact = false }: { href: string; ico
   );
 }
 
-export function Sidebar() {
-  const trialPct = Math.round(((CURRENT_USER.trialDays - CURRENT_USER.trialDaysLeft) / CURRENT_USER.trialDays) * 100);
+export function Sidebar({ account }: { account: Account | null }) {
+  const trialPct = account ? Math.round(((account.trialDays - account.trialDaysLeft) / account.trialDays) * 100) : 0;
+  const onTrial = account?.subscriptionStatus === "trialing";
   const sections = [
     { id: "pilotage", title: null },
     { id: "outils", title: "Outils" },
@@ -112,31 +113,36 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto flex flex-col gap-4">
-        <div className="rounded-[10px] border border-line bg-canvas p-3.5">
-          <p className="text-[13px] font-semibold">
-            Offre {PLANS[CURRENT_USER.plan].name} · {CURRENT_USER.trialDaysLeft} jours d&apos;essai restants
-          </p>
-          <div
-            className="mt-2.5 h-1.5 rounded-full bg-line"
-            role="progressbar"
-            aria-label="Essai gratuit consommé"
-            aria-valuenow={trialPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div className="h-full rounded-full bg-brand-600" style={{ width: `${trialPct}%` }} />
+        {account && onTrial && (
+          <div className="rounded-[10px] border border-line bg-canvas p-3.5">
+            <p className="text-[13px] font-semibold">
+              Offre {PLANS[account.plan].name} · {account.trialDaysLeft} jour{account.trialDaysLeft > 1 ? "s" : ""} d&apos;essai restant{account.trialDaysLeft > 1 ? "s" : ""}
+            </p>
+            <div
+              className="mt-2.5 h-1.5 rounded-full bg-line"
+              role="progressbar"
+              aria-label="Essai gratuit consommé"
+              aria-valuenow={trialPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className="h-full rounded-full bg-brand-600" style={{ width: `${trialPct}%` }} />
+            </div>
+            <Link href="/app/parametres" className="mt-2.5 inline-block text-[13px] font-semibold text-brand-700">
+              Choisir mon offre
+            </Link>
           </div>
-          <Link href="/app/parametres" className="mt-2.5 inline-block text-[13px] font-semibold text-brand-700">
-            Choisir mon offre
-          </Link>
-        </div>
+        )}
+        {account?.demo && (
+          <p className="rounded-[10px] bg-warning-50 px-3.5 py-2.5 text-[13px] text-warning-700">Mode démo : données d&apos;exemple.</p>
+        )}
         <div className="flex items-center gap-2.5 border-t border-line px-1 pt-4">
-          <span className="flex size-9 items-center justify-center rounded-full bg-brand-50 text-[13px] font-bold text-brand-700">
-            {CURRENT_USER.initials}
+          <span className="flex size-9 flex-none items-center justify-center rounded-full bg-brand-50 text-[13px] font-bold text-brand-700">
+            {account?.initials ?? ""}
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-semibold">{CURRENT_USER.fullName}</span>
-            <span className="block text-[13px] text-muted">{CURRENT_USER.agency}</span>
+            <span className="block truncate text-sm font-semibold">{account?.fullName ?? "\u00a0"}</span>
+            <span className="block truncate text-[13px] text-muted">{account?.agencyName ?? "\u00a0"}</span>
           </span>
           <form action={signOut} className="ml-auto">
             <button type="submit" aria-label="Se déconnecter" title="Se déconnecter" className="flex size-9 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-ink">

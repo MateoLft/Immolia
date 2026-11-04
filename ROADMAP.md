@@ -14,10 +14,11 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Mise en page de l'espace agent (menu latéral, menu mobile) | ✅ |
 | Offres et tarifs centralisés (`src/lib/plans.ts`) | ✅ |
 | Liste des modules centralisée (`src/lib/modules.ts`) | ✅ |
-| Base de données Supabase (agences, utilisateurs, biens, visites, acquéreurs) | 🟡 schéma prêt, à exécuter dans Supabase |
-| Comptes : inscription, connexion, déconnexion (Supabase Auth) | 🟡 codé, à activer avec les clés |
+| Base de données Supabase (agences, utilisateurs, biens, visites, acquéreurs) | ✅ |
+| Comptes : inscription, connexion, déconnexion (Supabase Auth) | ✅ |
 | Mot de passe oublié | ⬜ |
-| Brancher le tableau de bord et les biens sur la base (fin des données d'exemple) | ⬜ |
+| Brancher le tableau de bord et les biens sur la base (fin des données d'exemple) | ✅ |
+| Mise en ligne sur Vercel (immolia.vercel.app) | ✅ |
 | Abonnements Stripe (essai 14 jours, mensuel / annuel, portail client) | ⬜ |
 | Accès aux modules selon l'offre souscrite | ⬜ |
 | Prise en main guidée (premier bien, logo, couleurs) | ⬜ |
@@ -27,10 +28,12 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Page | État | Maquette |
 |---|---|---|
 | Site vitrine + tarifs + FAQ | ✅ | 🎨 |
-| Tableau de bord de l'agent | 🟡 | 🎨 |
-| Liste des biens | 🟡 | |
-| Fiche d'un bien | 🟡 | 🎨 |
-| Ajouter un bien (3 étapes, mobile) | ⬜ | 🎨 étape 2 |
+| Tableau de bord de l'agent | ✅ | 🎨 |
+| Liste des biens | ✅ | |
+| Fiche d'un bien | ✅ (sans photos) | 🎨 |
+| Modifier / archiver un bien | ⬜ | |
+| Photos des biens (stockage Supabase) | ⬜ | |
+| Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
 | Page publique du bien + QR code | ⬜ | |
 | Studio IA : texte d'annonce, posts réseaux sociaux, plaquette PDF | ⬜ | 🎨 |
 | Visites : agenda, réservation en ligne, rappels SMS | ⬜ | |
