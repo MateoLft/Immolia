@@ -108,10 +108,11 @@ export default function DashboardPage() {
               <Sparkles aria-hidden className="size-[18px] text-brand-700" strokeWidth={1.8} />
             </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold">Bientôt : le Studio IA</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted">
-                Annonces, posts et vidéos générés automatiquement à partir de vos biens.
+              <p className="text-sm font-semibold">Studio IA</p>
+              <p className="mt-1 mb-2.5 text-[13px] leading-relaxed text-muted">
+                Annonces et posts pour les réseaux sociaux, rédigés en quelques secondes à partir de vos biens.
               </p>
+              <Link href="/app/studio" className="text-[13px] font-semibold text-brand-700">Ouvrir le Studio</Link>
             </div>
           </Card>
         </div>

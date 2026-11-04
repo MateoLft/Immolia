@@ -26,7 +26,7 @@ export const MODULES: AppModule[] = [
   { slug: "mandats", name: "Mandats", description: "Registre des mandats, alertes d'échéance et détection d'opportunités.", plan: "agence", status: "prevu", section: "pilotage" },
   { slug: "estimations", name: "Estimations", description: "Widget d'estimation à votre marque et rapports PDF.", plan: "pro", status: "prevu", section: "pilotage" },
   { slug: "dossiers", name: "Dossiers de vente", description: "Collecte des pièces, relances et analyse des PV d'AG par l'IA.", plan: "agence", status: "prevu", section: "pilotage" },
-  { slug: "studio", name: "Studio IA", description: "Annonces, posts réseaux sociaux, vidéos et plaquettes PDF.", plan: "essentiel", status: "prevu", section: "outils" },
+  { slug: "studio", name: "Studio IA", description: "Annonces, posts réseaux sociaux, vidéos et plaquettes PDF.", plan: "essentiel", status: "en-cours", section: "outils" },
   { slug: "conformite", name: "Conformité", description: "Contrôles anti-blanchiment (LCB-FT) et pièces justificatives.", plan: "agence", status: "prevu", section: "outils" },
   { slug: "equipe", name: "Équipe", description: "Agents, rôles et tableau de bord manager.", plan: "agence", status: "prevu", section: "outils" },
   { slug: "parametres", name: "Paramètres", description: "Profil, marque (logo, couleurs), abonnement et factures.", plan: "essentiel", status: "prevu", section: "outils" },

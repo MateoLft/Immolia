@@ -2,8 +2,8 @@
 
 import { useActionState, type ReactNode } from "react";
 import clsx from "clsx";
-import { createProperty, type PropertyFormState } from "@/app/app/biens/actions";
-import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES } from "@/lib/property-types";
+import { createProperty, updateProperty, type PropertyFormState } from "@/app/app/biens/actions";
+import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES, type Property } from "@/lib/property-types";
 import { ButtonLink } from "@/components/ui/button";
 
 const inputClasses =
@@ -68,10 +68,36 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export function PropertyForm() {
-  const [state, action, pending] = useActionState<PropertyFormState, FormData>(createProperty, {});
+/** Valeurs initiales du formulaire à partir d'un bien existant. */
+function toValues(p: Property): Record<string, string> {
+  const s = (x: string | number | null) => (x === null ? "" : String(x));
+  return {
+    title: p.title,
+    kind: p.kind,
+    address: s(p.address),
+    postal_code: s(p.postalCode),
+    city: p.city,
+    price: s(p.price),
+    surface: s(p.surface),
+    rooms: s(p.rooms),
+    bedrooms: s(p.bedrooms),
+    floor: s(p.floor),
+    dpe: s(p.dpe),
+    ges: s(p.ges),
+    charges: s(p.annualCharges),
+    description: s(p.description),
+    mandate_type: s(p.mandateType),
+    mandate_end: s(p.mandateEnd),
+    reference: s(p.reference),
+    status: p.status,
+  };
+}
+
+export function PropertyForm({ property }: { property?: Property }) {
+  const formAction = property ? updateProperty.bind(null, property.id) : createProperty;
+  const [state, action, pending] = useActionState<PropertyFormState, FormData>(formAction, {});
   const e = state.fieldErrors ?? {};
-  const v = state.values ?? {};
+  const v = state.values ?? (property ? toValues(property) : {});
 
   return (
     <form action={action} className="flex flex-col gap-6" noValidate>
@@ -126,7 +152,7 @@ export function PropertyForm() {
         <Field label="Charges annuelles (€)" name="charges" error={e.charges}>
           <Input name="charges" defaultValue={v.charges} error={e.charges} inputMode="numeric" />
         </Field>
-        <Field label="Description" name="description" className="sm:col-span-2 lg:col-span-4" hint="Bientôt : rédaction automatique par le Studio IA">
+        <Field label="Description" name="description" className="sm:col-span-2 lg:col-span-4" hint="Vos notes (atouts, rénovations, environnement…) : le Studio IA s'en sert pour rédiger l'annonce">
           <textarea id="description" name="description" rows={5} defaultValue={v.description} className={clsx(inputClasses, "h-auto py-3 leading-relaxed")} />
         </Field>
       </Section>
@@ -146,7 +172,7 @@ export function PropertyForm() {
         </Field>
         <Field label="Statut" name="status">
           <Select name="status" defaultValue={v.status ?? "brouillon"}>
-            {PROPERTY_STATUSES.filter((s) => s !== "archive").map((s) => <option key={s} value={s}>{STATUS_LABEL[s].label}</option>)}
+            {PROPERTY_STATUSES.filter((s) => s !== "archive" || property).map((s) => <option key={s} value={s}>{STATUS_LABEL[s].label}</option>)}
           </Select>
         </Field>
       </Section>
@@ -156,7 +182,7 @@ export function PropertyForm() {
       )}
 
       <div className="flex flex-wrap justify-end gap-3">
-        <ButtonLink href="/app/biens" variant="secondary" size="lg">Annuler</ButtonLink>
+        <ButtonLink href={property ? `/app/biens/${property.id}` : "/app/biens"} variant="secondary" size="lg">Annuler</ButtonLink>
         <button
           type="submit"
           disabled={pending}

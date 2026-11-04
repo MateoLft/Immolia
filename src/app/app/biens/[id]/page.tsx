@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ImagePlus, Sparkles } from "lucide-react";
+import { ImagePlus, Pencil, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -49,7 +49,10 @@ function PropertyHeader({ p }: { p: Property }) {
             </div>
             <p className="mt-1.5 text-sm text-muted">{meta.join(" · ")}</p>
           </div>
-          <ButtonLink href="/app/studio"><Sparkles aria-hidden className="size-4" />Studio IA</ButtonLink>
+          <div className="flex flex-wrap gap-2.5">
+            <ButtonLink href={`/app/biens/${p.id}/modifier`} variant="secondary"><Pencil aria-hidden className="size-4" />Modifier</ButtonLink>
+            <ButtonLink href={`/app/studio/${p.id}`}><Sparkles aria-hidden className="size-4" />Studio IA</ButtonLink>
+          </div>
         </div>
       </div>
     </div>
@@ -99,7 +102,7 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
             {p.description ? (
               <p className="p-5 text-[15px] leading-relaxed whitespace-pre-line text-body">{p.description}</p>
             ) : (
-              <p className="p-5 text-[15px] text-muted">Pas encore de description. Bientôt, le Studio IA pourra la rédiger pour vous.</p>
+              <p className="p-5 text-[15px] text-muted">Pas encore de description. Cliquez sur « Modifier » pour ajouter vos notes de visite : le Studio IA s&apos;en servira pour rédiger l&apos;annonce.</p>
             )}
           </Card>
         </div>

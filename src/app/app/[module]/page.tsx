@@ -3,8 +3,8 @@ import { ComingSoon } from "@/components/app/coming-soon";
 import { MODULES, getModule } from "@/lib/modules";
 
 export function generateStaticParams() {
-  // « biens » a ses propres pages.
-  return MODULES.filter((m) => m.slug !== "biens").map((m) => ({ module: m.slug }));
+  // Ces modules ont leurs propres pages.
+  return MODULES.filter((m) => !["biens", "studio"].includes(m.slug)).map((m) => ({ module: m.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/app/[module]">) {

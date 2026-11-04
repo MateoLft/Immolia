@@ -32,7 +32,11 @@ function oneOf<T extends string>(value: string | null, allowed: readonly T[]): T
   return value !== null && (allowed as readonly string[]).includes(value) ? (value as T) : null;
 }
 
-export async function createProperty(_prev: PropertyFormState, form: FormData): Promise<PropertyFormState> {
+type ParsedForm =
+  | { ok: true; row: Record<string, unknown>; values: Record<string, string> }
+  | { ok: false; state: PropertyFormState };
+
+function parsePropertyForm(form: FormData): ParsedForm {
   const values = Object.fromEntries(
     [...form.entries()].filter(([k, v]) => typeof v === "string" && !k.startsWith("$")).map(([k, v]) => [k, String(v)]),
   );
@@ -69,21 +73,45 @@ export async function createProperty(_prev: PropertyFormState, form: FormData): 
   };
 
   if (Object.keys(errors).length > 0) {
-    return { error: "Merci de corriger les champs indiqués.", fieldErrors: errors, values };
+    return { ok: false, state: { error: "Merci de corriger les champs indiqués.", fieldErrors: errors, values } };
   }
-  if (!isSupabaseConfigured) return { error: "L'ajout de biens n'est pas disponible en mode démo.", values };
+  if (!isSupabaseConfigured) {
+    return { ok: false, state: { error: "L'enregistrement n'est pas disponible en mode démo.", values } };
+  }
+  return { ok: true, row, values };
+}
 
+async function requireUser() {
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const userId = claims?.claims?.sub;
   if (!userId) redirect("/connexion");
+  return { supabase, userId };
+}
 
+export async function createProperty(_prev: PropertyFormState, form: FormData): Promise<PropertyFormState> {
+  const parsed = parsePropertyForm(form);
+  if (!parsed.ok) return parsed.state;
+
+  const { supabase, userId } = await requireUser();
   const { data, error } = await supabase
     .from("properties")
-    .insert({ ...row, agent_id: userId })
+    .insert({ ...parsed.row, agent_id: userId })
     .select("id")
     .single();
 
-  if (error || !data) return { error: "L'enregistrement a échoué, merci de réessayer.", values };
+  if (error || !data) return { error: "L'enregistrement a échoué, merci de réessayer.", values: parsed.values };
   redirect(`/app/biens/${data.id}`);
+}
+
+/** Mise à jour d'un bien existant (l'identifiant est lié côté serveur via .bind). */
+export async function updateProperty(id: string, _prev: PropertyFormState, form: FormData): Promise<PropertyFormState> {
+  const parsed = parsePropertyForm(form);
+  if (!parsed.ok) return parsed.state;
+
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.from("properties").update(parsed.row).eq("id", id).select("id").maybeSingle();
+
+  if (error || !data) return { error: "L'enregistrement a échoué, merci de réessayer.", values: parsed.values };
+  redirect(`/app/biens/${id}`);
 }

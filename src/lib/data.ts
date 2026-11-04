@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { DEMO_ACCOUNT, DEMO_PROPERTIES, DEMO_STATS, DEMO_VISITS } from "./mock-data";
+import type { GeneratedContent } from "./studio";
 import {
   ACTIVE_STATUSES,
   initialsOf,
@@ -196,6 +197,19 @@ export async function listUpcomingVisits({ propertyId, limit = 5 }: { propertyId
   if (propertyId) query = query.eq("property_id", propertyId);
   const { data } = await query;
   return ((data ?? []) as VisitRow[]).map(toVisit);
+}
+
+/** Contenus générés par le Studio IA pour un bien, du plus récent au plus ancien. */
+export async function listGeneratedContents(propertyId: string, limit = 20): Promise<GeneratedContent[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("generated_contents")
+    .select("id, kind, tone, content, created_at")
+    .eq("property_id", propertyId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data ?? []).map((r) => ({ id: r.id, kind: r.kind, tone: r.tone, content: r.content, createdAt: r.created_at }));
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {

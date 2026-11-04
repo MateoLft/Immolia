@@ -31,11 +31,13 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Tableau de bord de l'agent | ✅ | 🎨 |
 | Liste des biens | ✅ | |
 | Fiche d'un bien | ✅ (sans photos) | 🎨 |
-| Modifier / archiver un bien | ⬜ | |
+| Modifier / archiver un bien | ✅ (archiver = statut « Archivé ») | |
 | Photos des biens (stockage Supabase) | ⬜ | |
 | Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
 | Page publique du bien + QR code | ⬜ | |
-| Studio IA : texte d'annonce, posts réseaux sociaux, plaquette PDF | ⬜ | 🎨 |
+| Studio IA : annonce portails, annonce courte, posts Instagram / Facebook | ✅ | 🎨 |
+| Studio IA : plaquette PDF | ⬜ | |
+| Studio IA : quota 15 biens / mois pour l'offre Essentiel | ⬜ (avec Stripe) | |
 | Visites : agenda, réservation en ligne, rappels SMS | ⬜ | |
 | Bon de visite signé électroniquement | ⬜ | |
 | Paramètres : profil, marque, abonnement, factures | ⬜ | |
