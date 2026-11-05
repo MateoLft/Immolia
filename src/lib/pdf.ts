@@ -34,6 +34,11 @@ export function clean(text: string) {
     .replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ€ŒœŸ]/g, "");
 }
 
+/** Largeur d'un texte, après nettoyage (sinon pdf-lib plante sur les caractères non pris en charge). */
+export function width(font: PDFFont, value: string, size: number) {
+  return font.widthOfTextAtSize(clean(value), size);
+}
+
 export function wrap(text: string, font: PDFFont, size: number, maxWidth: number) {
   const lines: string[] = [];
   for (const paragraph of clean(text).split(/\n/)) {

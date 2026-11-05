@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getEstimationRequest, getSettings } from "@/lib/data";
-import { A4, COLORS, MARGIN, newDocument, paragraph, pdfResponse, text } from "@/lib/pdf";
+import { A4, COLORS, MARGIN, width as textWidth, newDocument, paragraph, pdfResponse, text } from "@/lib/pdf";
 import { formatEuros, formatNumber, kindLabel } from "@/lib/property-types";
 
 /** Avis de valeur au format PDF, aux couleurs de l'agence. */
@@ -51,7 +51,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/app/estimations/[id
   text(page, range, MARGIN + 18, y - 48, bold, 22, COLORS.brand);
   if (r.priceLow && r.priceHigh && r.surface) {
     const m2 = `soit ${formatEuros(Math.round(r.priceLow / r.surface))} à ${formatEuros(Math.round(r.priceHigh / r.surface))} / m²`;
-    text(page, m2, A4.w - MARGIN - 18 - regular.widthOfTextAtSize(m2, 10), y - 46, regular, 10, COLORS.muted);
+    text(page, m2, A4.w - MARGIN - 18 - textWidth(regular, m2, 10), y - 46, regular, 10, COLORS.muted);
   }
   y -= 110;
 

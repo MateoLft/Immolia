@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getProperty, getSettings, listGeneratedContents } from "@/lib/data";
-import { A4, COLORS, MARGIN, drawCover, embedImage, energyScale, newDocument, paragraph, pdfResponse, text } from "@/lib/pdf";
+import { A4, COLORS, MARGIN, width as textWidth, drawCover, embedImage, energyScale, newDocument, paragraph, pdfResponse, text } from "@/lib/pdf";
 import { formatEuros, formatNumber, kindLabel } from "@/lib/property-types";
 
 /** Plaquette commerciale du bien (PDF A4, 2 pages max) aux couleurs de l'agence. */
@@ -37,7 +37,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/app/biens/[id]/plaq
   // En-tête agence
   text(page, agency.name || settings.fullName, MARGIN, y - 12, bold, 14, COLORS.brand);
   const contact = [agency.phone || settings.phone, agency.email || settings.email].filter(Boolean).join("  ·  ");
-  if (contact) text(page, contact, A4.w - MARGIN - regular.widthOfTextAtSize(contact, 9), y - 10, regular, 9, COLORS.muted);
+  if (contact) text(page, contact, A4.w - MARGIN - textWidth(regular, contact, 9), y - 10, regular, 9, COLORS.muted);
   y -= 30;
 
   // Photo principale
@@ -49,7 +49,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/app/biens/[id]/plaq
   text(page, p.title, MARGIN, y, bold, 20);
   if (p.price) {
     const price = formatEuros(p.price);
-    text(page, price, A4.w - MARGIN - bold.widthOfTextAtSize(price, 20), y, bold, 20, COLORS.brand);
+    text(page, price, A4.w - MARGIN - textWidth(bold, price, 20), y, bold, 20, COLORS.brand);
   }
   y -= 18;
   text(page, [p.postalCode, p.city].filter(Boolean).join(" "), MARGIN, y, regular, 11, COLORS.muted);
@@ -83,7 +83,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/app/biens/[id]/plaq
     const fit: string[] = [];
     let cy = y;
     for (const line of lines) {
-      const needed = Math.max(1, Math.ceil(regular.widthOfTextAtSize(line, 10.5) / width)) * 15;
+      const needed = Math.max(1, Math.ceil(textWidth(regular, line, 10.5) / width)) * 15;
       if (cy - needed < footerTop) break;
       fit.push(line);
       cy -= needed;
