@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StudioWorkspace } from "@/components/app/studio-workspace";
-import { getProperty, listGeneratedContents } from "@/lib/data";
-import { isAiConfigured } from "@/lib/ai";
+import { getProperty, listGeneratedContents, listPropertyPhotos } from "@/lib/data";
+import { MAX_AI_PHOTOS, isAiConfigured } from "@/lib/ai";
 
 export const metadata = { title: "Studio IA" };
 
@@ -12,7 +12,7 @@ async function Workspace({ params }: { params: PageProps<"/app/studio/[id]">["pa
   const { id } = await params;
   const property = await getProperty(id);
   if (!property) notFound();
-  const history = await listGeneratedContents(property.id);
+  const [history, photos] = await Promise.all([listGeneratedContents(property.id), listPropertyPhotos(property.id)]);
 
   return (
     <>
@@ -28,7 +28,13 @@ async function Workspace({ params }: { params: PageProps<"/app/studio/[id]">["pa
         </div>
         <Link href={`/app/biens/${property.id}`} className="text-sm font-semibold text-brand-700">Voir la fiche du bien</Link>
       </div>
-      <StudioWorkspace propertyId={property.id} initialHistory={history} aiReady={isAiConfigured()} />
+      <StudioWorkspace
+        propertyId={property.id}
+        initialHistory={history}
+        aiReady={isAiConfigured()}
+        photoCount={photos.length}
+        maxPhotos={MAX_AI_PHOTOS}
+      />
     </>
   );
 }

@@ -26,6 +26,7 @@ Règles impératives :
 - Ne mentionne ni l'adresse exacte ni le numéro de rue, même s'ils sont fournis : seulement la ville ou le quartier.
 - Respecte la loi : pas de discrimination, pas de promesse de rentabilité, pas d'affirmation trompeuse.
 - Pour les annonces destinées aux portails, termine par une ligne de mentions avec la classe énergie (DPE) et la classe climat (GES) si elles sont fournies, sinon « DPE : en cours ». Ajoute « Honoraires : [À COMPLÉTER] » pour que l'agent indique qui les paie.
+- Si des photos du bien sont jointes, sers-t'en pour décrire l'ambiance, la luminosité, le style, les matériaux et l'état apparent, uniquement pour ce qui est clairement visible. Ne déduis jamais des photos une surface, un nombre de pièces, une vue, une exposition ou un équipement incertain. En cas de contradiction, les informations écrites priment.
 - Réponds uniquement avec le texte final, sans introduction, sans commentaire, sans titre du type « Voici l'annonce », et sans mise en forme Markdown (pas d'astérisques ni de dièses), sauf les hashtags des réseaux sociaux.`;
 
 const KIND_INSTRUCTIONS: Record<ContentKind, string> = {
@@ -68,8 +69,11 @@ function describeProperty(p: Property, agencyName: string) {
     .join("\n");
 }
 
+/** Nombre maximum de photos envoyées à l'IA (la photo principale d'abord). */
+export const MAX_AI_PHOTOS = 4;
+
 export type GenerationResult =
-  | { ok: true; text: string; model: string; inputTokens: number; outputTokens: number }
+  | { ok: true; text: string; model: string; inputTokens: number; outputTokens: number; usedPhotos: number }
   | { ok: false; error: string };
 
 export async function generatePropertyContent(
@@ -77,15 +81,24 @@ export async function generatePropertyContent(
   agencyName: string,
   kind: ContentKind,
   tone: Tone,
+  photoUrls: string[] = [],
 ): Promise<GenerationResult> {
   if (!isAiConfigured()) {
     return { ok: false, error: "Le Studio IA n'est pas encore activé : la clé ANTHROPIC_API_KEY est manquante." };
   }
 
-  const userMessage = `Informations sur le bien :\n<bien>\n${describeProperty(property, agencyName)}\n</bien>\n\nConsigne : ${KIND_INSTRUCTIONS[kind]}\n${TONE_INSTRUCTIONS[tone]}`;
+  const photos = photoUrls.slice(0, MAX_AI_PHOTOS);
+  const instructions = `Informations sur le bien :\n<bien>\n${describeProperty(property, agencyName)}\n</bien>\n\nConsigne : ${KIND_INSTRUCTIONS[kind]}\n${TONE_INSTRUCTIONS[tone]}`;
 
-  try {
-    const response = await getClient().beta.messages.create({
+  const call = (withPhotos: string[]) => {
+    const content: Anthropic.Beta.BetaContentBlockParam[] = [
+      ...withPhotos.map((url): Anthropic.Beta.BetaImageBlockParam => ({ type: "image", source: { type: "url", url } })),
+      {
+        type: "text",
+        text: withPhotos.length > 0 ? `Les ${withPhotos.length} photo(s) ci-dessus montrent le bien.\n\n${instructions}` : instructions,
+      },
+    ];
+    return getClient().beta.messages.create({
       model: AI_MODEL,
       max_tokens: 8000,
       output_config: { effort: "low" },
@@ -93,8 +106,25 @@ export async function generatePropertyContent(
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
+      messages: [{ role: "user", content }],
     });
+  };
+
+  try {
+    let used = photos;
+    let response;
+    try {
+      response = await call(photos);
+    } catch (error) {
+      // Une photo illisible ou inaccessible ne doit pas bloquer la rédaction : on réessaie sans photos.
+      if (photos.length > 0 && error instanceof Anthropic.BadRequestError) {
+        console.error("Studio IA : photos refusées, nouvelle tentative sans photos", error.message);
+        used = [];
+        response = await call([]);
+      } else {
+        throw error;
+      }
+    }
 
     if (response.stop_reason === "refusal") {
       return { ok: false, error: "Le contenu n'a pas pu être généré pour ce bien. Modifiez la description et réessayez." };
@@ -114,6 +144,7 @@ export async function generatePropertyContent(
       model: response.model,
       inputTokens: response.usage.input_tokens,
       outputTokens: response.usage.output_tokens,
+      usedPhotos: used.length,
     };
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {

@@ -36,6 +36,7 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
 | Page publique du bien + QR code | ⬜ | |
 | Studio IA : annonce portails, annonce courte, posts Instagram / Facebook | ✅ | 🎨 |
+| Studio IA : analyse des photos (ambiance, style, état) | ✅ | |
 | Studio IA : plaquette PDF | ⬜ | |
 | Studio IA : quota 15 biens / mois pour l'offre Essentiel | ⬜ (avec Stripe) | |
 | Visites : agenda, réservation en ligne, rappels SMS | ⬜ | |

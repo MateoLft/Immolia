@@ -12,11 +12,16 @@ export function StudioWorkspace({
   propertyId,
   initialHistory,
   aiReady,
+  photoCount,
+  maxPhotos,
 }: {
   propertyId: string;
   initialHistory: GeneratedContent[];
   aiReady: boolean;
+  photoCount: number;
+  maxPhotos: number;
 }) {
+  const [usePhotos, setUsePhotos] = useState(photoCount > 0);
   const [kind, setKind] = useState<ContentKind>("annonce");
   const [tone, setTone] = useState<Tone>("chaleureux");
   const [history, setHistory] = useState(initialHistory);
@@ -43,14 +48,17 @@ export function StudioWorkspace({
     setError(null);
     setNotice(null);
     startTransition(async () => {
-      const res = await generateContent(propertyId, kind, tone);
+      const res = await generateContent(propertyId, kind, tone, usePhotos);
       if (!res.ok) {
         setError(res.error);
         return;
       }
       setHistory((h) => [res.content, ...h]);
       show(res.content);
-      if (!res.saved) setNotice("Contenu généré, mais non enregistré dans l'historique.");
+      const notices: string[] = [];
+      if (res.photosRequested > 0 && res.usedPhotos === 0) notices.push("Les photos n'ont pas pu être analysées : le texte a été rédigé à partir de la fiche seule.");
+      if (!res.saved) notices.push("Contenu généré, mais non enregistré dans l'historique.");
+      if (notices.length > 0) setNotice(notices.join(" "));
     });
   }
 
@@ -109,6 +117,26 @@ export function StudioWorkspace({
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className={clsx("flex items-start gap-2.5 text-sm", photoCount === 0 ? "text-subtle" : "text-body")}>
+            <input
+              type="checkbox"
+              checked={usePhotos}
+              disabled={photoCount === 0}
+              onChange={(e) => setUsePhotos(e.target.checked)}
+              className="mt-0.5 size-4 accent-brand-600"
+            />
+            <span>
+              <span className="font-semibold">Analyser les photos</span>
+              <span className="block text-xs text-subtle">
+                {photoCount === 0
+                  ? "Ajoutez des photos sur la fiche du bien pour enrichir le texte."
+                  : `L'IA regarde ${Math.min(photoCount, maxPhotos)} photo${Math.min(photoCount, maxPhotos) > 1 ? "s" : ""} (ambiance, style, état).`}
+              </span>
+            </span>
+          </label>
         </div>
 
         <button
