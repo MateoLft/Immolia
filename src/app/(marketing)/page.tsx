@@ -62,7 +62,7 @@ export default function HomePage() {
             Studio IA : annonces, posts et vidéos en un clic
           </a>
           <h1 className="max-w-4xl text-4xl leading-[1.08] font-bold tracking-tight md:text-6xl">
-            Le logiciel tout-en-un des agents immobiliers
+            Le logiciel <span className="text-brand-600">tout-en-un</span> des agents immobiliers
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-muted md:text-xl">
             Biens, visites, acquéreurs, vendeurs et mandats réunis dans une seule plateforme. L&apos;intelligence
@@ -234,14 +234,14 @@ export default function HomePage() {
 
       {/* Appel à l'action */}
       <section className="px-6 pb-24">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-7 rounded-[20px] bg-ink px-8 py-16 md:px-12">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-7 rounded-[20px] bg-brand-600 px-8 py-16 md:px-12">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white md:text-[34px]">Prêt à moderniser votre agence ?</h2>
-            <p className="mt-2.5 text-lg text-line-strong">Lancez votre essai en 2 minutes, sans carte bancaire.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-canvas md:text-[34px]">Prêt à moderniser votre agence ?</h2>
+            <p className="mt-2.5 text-lg text-canvas/80">Lancez votre essai en 2 minutes, sans carte bancaire.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <ButtonLink href="/app" variant="secondary" size="lg">Voir la démo</ButtonLink>
-            <ButtonLink href="/inscription" size="lg">Démarrer l&apos;essai</ButtonLink>
+            <ButtonLink href="/app" size="lg" className="bg-canvas text-ink hover:bg-hover">Voir la démo</ButtonLink>
+            <ButtonLink href="/inscription" size="lg" className="bg-canvas text-brand-600 hover:bg-hover">Démarrer l&apos;essai</ButtonLink>
           </div>
         </div>
       </section>

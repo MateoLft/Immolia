@@ -117,9 +117,9 @@ export function VideoMaker({ photos, title, subtitle, price, contact }: { photos
           if (price) {
             ctx.font = "700 64px Inter, system-ui, sans-serif";
             const w = ctx.measureText(price).width;
-            ctx.fillStyle = "#4654F0";
+            ctx.fillStyle = "#C8F560";
             ctx.fillRect(60, 120, w + 100, 120);
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = "#0B0F17";
             ctx.fillText(price, 110, 202);
           }
         } else {
@@ -187,10 +187,10 @@ export function VideoMaker({ photos, title, subtitle, price, contact }: { photos
       </section>
 
       <section className="flex flex-col items-center gap-3 rounded-xl border border-line bg-white p-5 shadow-card">
-        <canvas ref={canvas} aria-label="Aperçu de la vidéo" className={clsx("aspect-[9/16] w-full max-w-[260px] rounded-lg bg-ink", result && "hidden")} />
+        <canvas ref={canvas} aria-label="Aperçu de la vidéo" className={clsx("aspect-[9/16] w-full max-w-[260px] rounded-lg bg-canvas", result && "hidden")} />
         {result && (
           <>
-            <video src={result.url} controls playsInline className="aspect-[9/16] w-full max-w-[260px] rounded-lg bg-ink" />
+            <video src={result.url} controls playsInline className="aspect-[9/16] w-full max-w-[260px] rounded-lg bg-canvas" />
             <a href={result.url} download={`video-bien.${result.ext}`} className="flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white shadow-xs hover:bg-brand-700">
               <Download aria-hidden className="size-4" />Télécharger ({result.ext.toUpperCase()})
             </a>

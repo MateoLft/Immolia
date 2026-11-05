@@ -121,7 +121,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
             <li key={photo.id} className={clsx("group relative overflow-hidden rounded-lg border border-line bg-canvas", i === 0 && "col-span-2 row-span-2")}>
               {/* eslint-disable-next-line @next/next/no-img-element -- URL signée temporaire du stockage privé */}
               <img src={photo.url} alt={i === 0 ? "Photo principale du bien" : `Photo ${i + 1} du bien`} className="aspect-[4/3] h-full w-full object-cover" loading="lazy" />
-              {i === 0 && <span className="absolute top-2 left-2 rounded-md bg-ink/75 px-2 py-1 text-xs font-semibold text-white">Photo principale</span>}
+              {i === 0 && <span className="absolute top-2 left-2 rounded-md bg-canvas/85 px-2 py-1 text-xs font-semibold text-ink">Photo principale</span>}
               <div className="absolute right-2 bottom-2 flex gap-1.5">
                 {i > 0 && (
                   <button

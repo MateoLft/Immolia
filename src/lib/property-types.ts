@@ -187,7 +187,7 @@ export function kindLabel(kind: string) {
 }
 
 /** Couleur de vignette stable par bien, en attendant les photos. */
-const TINTS = ["#DCE6FF", "#FDE7C8", "#D3F0E2", "#FBDCD2", "#E4E7EC", "#E9DDFB"];
+const TINTS = ["#1E2A3F", "#2B2440", "#1D3328", "#3A2A1F", "#262C38", "#33223A"];
 export function tintFor(id: string) {
   let h = 0;
   for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;

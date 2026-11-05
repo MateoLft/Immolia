@@ -62,7 +62,8 @@ export function SignaturePad({ visitId, defaultName }: { visitId: string; defaul
         <canvas
           ref={canvas}
           aria-labelledby="sig-label"
-          className="h-48 w-full touch-none rounded-lg border-2 border-dashed border-line-strong bg-white"
+          className="h-48 w-full touch-none rounded-lg border-2 border-dashed border-line-strong"
+          style={{ background: "#FFFFFF" }}
           onPointerDown={(e) => {
             drawing.current = true;
             const ctx = canvas.current!.getContext("2d")!;

@@ -1,50 +1,86 @@
 @import "tailwindcss";
 
 /*
- * Design tokens Immolia — version « Pro ».
+ * Design tokens Immolia — style « Nuit » (sombre, accent vert néon).
  * Toutes les couleurs de l'interface passent par ces variables :
  * changer une valeur ici met à jour tout le logiciel.
+ *
+ * Noms conservés pour la lisibilité du code :
+ * - « white » = la couleur des cartes et surfaces (et du texte posé sur l'accent)
+ * - « canvas » = le fond des pages
+ * - « ink » = le texte principal
  */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  /* Marque */
-  --color-brand-50: #eef0fe;
-  --color-brand-100: #dfe2fd;
-  --color-brand-600: #4654f0;
-  --color-brand-700: #3340d1;
-  --color-brand-800: #2a35b0;
+  /* Accent (vert néon) */
+  --color-brand-50: #1c2614;
+  --color-brand-100: #2c3c1c;
+  --color-brand-600: #c8f560;
+  --color-brand-700: #b5e24a;
+  --color-brand-800: #d9ff85;
 
-  /* Neutres */
-  --color-ink: #101828;
-  --color-body: #344054;
-  --color-muted: #475467;
-  --color-subtle: #667085;
-  --color-line: #eaecf0;
-  --color-line-strong: #d0d5dd;
-  --color-canvas: #f9fafb;
-  --color-hover: #f2f4f7;
+  /* Surfaces et texte */
+  --color-white: #131a26;
+  --color-canvas: #0b0f17;
+  --color-hover: #1a2231;
+  --color-line: #1e2635;
+  --color-line-strong: #2a3446;
+  --color-ink: #e8ecf4;
+  --color-body: #c9d1de;
+  --color-muted: #9aa4b8;
+  --color-subtle: #7f8aa0;
 
   /* Statuts */
-  --color-success-50: #ecfdf3;
-  --color-success-700: #067647;
-  --color-warning-50: #fffaeb;
-  --color-warning-500: #f79009;
-  --color-warning-700: #b54708;
-  --color-danger-50: #fef3f2;
-  --color-danger-700: #b42318;
+  --color-success-50: #0f2a1e;
+  --color-success-700: #4ade80;
+  --color-warning-50: #2a2112;
+  --color-warning-500: #f59e0b;
+  --color-warning-700: #fbbf24;
+  --color-danger-50: #2a1215;
+  --color-danger-700: #f87171;
 
-  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
-  --shadow-pop: 0 20px 32px -12px rgba(70, 84, 240, 0.25);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 20px 40px -16px rgba(200, 245, 96, 0.25);
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-canvas);
   color: var(--color-ink);
-  font-feature-settings: "cv11", "ss01";
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: var(--color-brand-600);
+  color: var(--color-canvas);
+}
+
+/* Impression (registre des mandats…) : retour au noir sur blanc. */
+@media print {
+  :root {
+    --color-white: #ffffff;
+    --color-canvas: #ffffff;
+    --color-ink: #111111;
+    --color-body: #222222;
+    --color-muted: #444444;
+    --color-subtle: #555555;
+    --color-line: #dddddd;
+    --color-line-strong: #bbbbbb;
+    --color-hover: #f2f2f2;
+  }
+  html {
+    color-scheme: light;
+  }
 }
