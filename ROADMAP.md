@@ -59,7 +59,7 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Vendeurs : fiches, prospects, relances, rapport hebdomadaire prêt à envoyer | ✅ | 🎨 |
 | Rapport vendeur envoyé automatiquement chaque lundi | ⬜ (service email + domaine) | |
 | Acquéreurs : liste, fiches, critères, score, rapprochement automatique avec les biens, envoi email/WhatsApp/SMS | ✅ | |
-| Assistant IA sur les pages publiques (200 messages / jour / bien) | ✅ | |
+| Assistant IA sur les pages publiques (50 messages / jour / bien) | ✅ | |
 | Assistant IA sur WhatsApp | ⬜ | |
 | Page « Estimez votre bien » + avis de valeur PDF + commentaire rédigé par l'IA | ✅ | |
 | Estimation automatique à partir des ventes réelles (DVF) | ⬜ | |
