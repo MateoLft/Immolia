@@ -158,3 +158,14 @@ export function tintFor(id: string) {
   for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return TINTS[h % TINTS.length];
 }
+
+export type Listing = {
+  portal: string;
+  status: "publie" | "retire";
+  url: string | null;
+  publishedAt: string;
+  removedAt: string | null;
+};
+
+/** Statuts pour lesquels les annonces doivent être retirées des portails. */
+export const OFF_MARKET_STATUSES: PropertyStatus[] = ["compromis", "vendu", "archive"];

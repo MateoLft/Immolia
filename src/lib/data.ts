@@ -12,6 +12,7 @@ import {
   type DashboardStats,
   type Property,
   type Buyer,
+  type Listing,
   type PropertyPhoto,
   type Visit,
   type VisitRequest,
@@ -342,6 +343,23 @@ export async function listPropertyPhotos(propertyId: string): Promise<PropertyPh
   return rows
     .map((r) => ({ id: r.id, position: r.position, url: urls.get(r.storage_path) ?? "" }))
     .filter((p) => p.url);
+}
+
+/** Diffusions de l'annonce d'un bien sur les portails. */
+export async function listListings(propertyId: string): Promise<Listing[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("property_listings")
+    .select("portal, status, listing_url, published_at, removed_at")
+    .eq("property_id", propertyId);
+  return (data ?? []).map((l) => ({
+    portal: l.portal,
+    status: l.status,
+    url: l.listing_url,
+    publishedAt: l.published_at,
+    removedAt: l.removed_at,
+  }));
 }
 
 /** Contenus générés par le Studio IA pour un bien, du plus récent au plus ancien. */

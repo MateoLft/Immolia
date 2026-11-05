@@ -35,6 +35,8 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Photos des biens (stockage Supabase privé, compression, photo principale) | ✅ | |
 | Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
 | Page publique du bien + QR code + demande de visite | ✅ | |
+| Diffusion assistée (Leboncoin, SeLoger, Bien'ici, Facebook) : textes prêts, ZIP photos, suivi | ✅ | |
+| Multidiffusion automatique (multidiffuseur ou passerelles portails) | ⬜ (après accords partenaires) | |
 | Studio IA : annonce portails, annonce courte, posts Instagram / Facebook | ✅ | 🎨 |
 | Studio IA : analyse des photos (ambiance, style, état) | ✅ | |
 | Studio IA : plaquette PDF | ⬜ | |

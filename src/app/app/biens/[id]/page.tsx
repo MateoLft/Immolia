@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Pencil, Sparkles } from "lucide-react";
+import { AlertTriangle, Pencil, Send, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpcomingVisits } from "@/components/app/upcoming-visits";
 import QRCode from "qrcode";
-import { getProperty, listGeneratedContents, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { getProperty, listGeneratedContents, listListings, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { PORTALS } from "@/lib/portals";
 import { publicPropertyPath, siteUrl } from "@/lib/site-url";
 import { PublicationCard } from "@/components/app/publication-card";
 import { PhotoManager } from "@/components/app/photo-manager";
 import {
+  OFF_MARKET_STATUSES,
   STATUS_LABEL,
   formatEuros,
   formatNumber,
@@ -54,6 +56,7 @@ function PropertyHeader({ p }: { p: Property }) {
           </div>
           <div className="flex flex-wrap gap-2.5">
             <ButtonLink href={`/app/biens/${p.id}/modifier`} variant="secondary"><Pencil aria-hidden className="size-4" />Modifier</ButtonLink>
+            <ButtonLink href={`/app/biens/${p.id}/diffuser`} variant="secondary"><Send aria-hidden className="size-4" />Diffuser</ButtonLink>
             <ButtonLink href={`/app/studio/${p.id}`}><Sparkles aria-hidden className="size-4" />Studio IA</ButtonLink>
           </div>
         </div>
@@ -67,7 +70,15 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
   const p = await getProperty(id);
   if (!p) notFound();
 
-  const [photos, contents, base] = await Promise.all([listPropertyPhotos(p.id), listGeneratedContents(p.id), siteUrl()]);
+  const [photos, contents, base, listings] = await Promise.all([
+    listPropertyPhotos(p.id),
+    listGeneratedContents(p.id),
+    siteUrl(),
+    listListings(p.id),
+  ]);
+  const liveListings = listings.filter((l) => l.status === "publie");
+  const mustRemove = OFF_MARKET_STATUSES.includes(p.status) && liveListings.length > 0;
+  const portalName = (id: string) => PORTALS.find((x) => x.id === id)?.name ?? id;
   const publicUrl = p.publicSlug ? `${base}${publicPropertyPath(p.publicSlug)}` : null;
   const [qrSvg, qrPng] = publicUrl
     ? await Promise.all([
@@ -128,6 +139,40 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
+          {mustRemove && (
+            <div role="alert" className="flex gap-3 rounded-xl border border-warning-500/40 bg-warning-50 p-4 text-sm text-warning-700">
+              <AlertTriangle aria-hidden className="size-5 flex-none" />
+              <p>
+                Ce bien est « {STATUS_LABEL[p.status].label.toLowerCase()} » : pensez à retirer l&apos;annonce de{" "}
+                <strong>{liveListings.map((l) => portalName(l.portal)).join(", ")}</strong>, puis indiquez-le dans{" "}
+                <Link href={`/app/biens/${p.id}/diffuser`} className="font-semibold underline">Diffuser</Link>.
+              </p>
+            </div>
+          )}
+
+          <Card>
+            <CardHeader title="Diffusion" action={<Link href={`/app/biens/${p.id}/diffuser`} className="text-[13px] font-semibold text-brand-700">Diffuser</Link>} />
+            <ul className="px-5 py-2">
+              {PORTALS.map((portal) => {
+                const l = listings.find((x) => x.portal === portal.id);
+                return (
+                  <li key={portal.id} className="flex items-center justify-between gap-3 border-b border-hover py-2.5 text-sm last:border-0">
+                    <span className="font-medium">{portal.name}</span>
+                    {l?.status === "publie" ? (
+                      l.url ? (
+                        <a href={l.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-success-700 underline">En ligne</a>
+                      ) : (
+                        <span className="font-semibold text-success-700">En ligne</span>
+                      )
+                    ) : (
+                      <span className="text-muted">{l?.status === "retire" ? "Retirée" : "Non diffusée"}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+
           <Card>
             <CardHeader title="Performance" />
             <div className="grid grid-cols-2 divide-x divide-line">
