@@ -19,17 +19,17 @@ export type AppModule = {
 };
 
 export const MODULES: AppModule[] = [
-  { slug: "biens", name: "Biens", description: "Fiches complètes, photos, documents et historique de chaque bien.", plan: "essentiel", status: "en-cours", section: "pilotage" },
-  { slug: "visites", name: "Visites", description: "Agenda, réservation en ligne, rappels SMS et bons de visite signés.", plan: "essentiel", status: "en-cours", section: "pilotage" },
-  { slug: "acquereurs", name: "Acquéreurs", description: "Fiches acquéreurs, score de qualification et assistant IA 24h/24.", plan: "pro", status: "en-cours", section: "pilotage" },
-  { slug: "vendeurs", name: "Vendeurs", description: "Suivi des vendeurs et rapport hebdomadaire automatique.", plan: "pro", status: "en-cours", section: "pilotage" },
-  { slug: "mandats", name: "Mandats", description: "Registre des mandats, alertes d'échéance et détection d'opportunités.", plan: "agence", status: "en-cours", section: "pilotage" },
-  { slug: "estimations", name: "Estimations", description: "Widget d'estimation à votre marque et rapports PDF.", plan: "pro", status: "prevu", section: "pilotage" },
-  { slug: "dossiers", name: "Dossiers de vente", description: "Collecte des pièces, relances et analyse des PV d'AG par l'IA.", plan: "agence", status: "prevu", section: "pilotage" },
-  { slug: "studio", name: "Studio IA", description: "Annonces, posts réseaux sociaux, vidéos et plaquettes PDF.", plan: "essentiel", status: "en-cours", section: "outils" },
-  { slug: "conformite", name: "Conformité", description: "Contrôles anti-blanchiment (LCB-FT) et pièces justificatives.", plan: "agence", status: "prevu", section: "outils" },
-  { slug: "equipe", name: "Équipe", description: "Agents, rôles et tableau de bord manager.", plan: "agence", status: "prevu", section: "outils" },
-  { slug: "parametres", name: "Paramètres", description: "Profil, marque (logo, couleurs), abonnement et factures.", plan: "essentiel", status: "en-cours", section: "outils" },
+  { slug: "biens", name: "Biens", description: "Fiches complètes, photos, documents et historique de chaque bien.", plan: "essentiel", status: "disponible", section: "pilotage" },
+  { slug: "visites", name: "Visites", description: "Agenda, demandes de visite en ligne, rappels en un clic et bons de visite signés sur écran.", plan: "essentiel", status: "disponible", section: "pilotage" },
+  { slug: "acquereurs", name: "Acquéreurs", description: "Critères de recherche, rapprochement automatique avec vos biens et assistant IA sur vos annonces.", plan: "pro", status: "disponible", section: "pilotage" },
+  { slug: "vendeurs", name: "Vendeurs", description: "Suivi des vendeurs et des prospects, rapport hebdomadaire prêt à envoyer.", plan: "pro", status: "disponible", section: "pilotage" },
+  { slug: "mandats", name: "Mandats", description: "Registre des mandats numéroté, alertes d'échéance et relances des prospects vendeurs.", plan: "agence", status: "disponible", section: "pilotage" },
+  { slug: "estimations", name: "Estimations", description: "Widget d'estimation à votre marque et rapports PDF.", plan: "pro", status: "disponible", section: "pilotage" },
+  { slug: "dossiers", name: "Dossiers de vente", description: "Collecte des pièces, relances et analyse des PV d'AG par l'IA.", plan: "agence", status: "disponible", section: "pilotage" },
+  { slug: "studio", name: "Studio IA", description: "Annonces, posts réseaux sociaux, vidéos courtes et plaquettes PDF.", plan: "essentiel", status: "disponible", section: "outils" },
+  { slug: "conformite", name: "Conformité", description: "Contrôles anti-blanchiment (LCB-FT) et pièces justificatives. Bientôt disponible.", plan: "agence", status: "prevu", section: "outils" },
+  { slug: "equipe", name: "Équipe", description: "Agents, rôles et tableau de bord manager. Bientôt disponible.", plan: "agence", status: "prevu", section: "outils" },
+  { slug: "parametres", name: "Paramètres", description: "Profil, marque (logo, couleurs), abonnement et factures.", plan: "essentiel", status: "disponible", section: "outils" },
 ];
 
 export function getModule(slug: string) {

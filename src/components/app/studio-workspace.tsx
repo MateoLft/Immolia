@@ -167,6 +167,11 @@ export function StudioWorkspace({
             Le Studio IA n&apos;est pas encore activé (clé ANTHROPIC_API_KEY manquante).
           </p>
         )}
+        <div className="flex flex-col gap-2 border-t border-line pt-4">
+          <p className="text-sm font-semibold">Autres formats</p>
+          <a href={`/app/biens/${propertyId}/plaquette.pdf`} target="_blank" rel="noopener" className="flex h-10 items-center justify-center rounded-lg border border-line-strong text-sm font-semibold text-body shadow-xs hover:bg-canvas">Plaquette PDF</a>
+          <a href={`/app/studio/${propertyId}/video`} className="flex h-10 items-center justify-center rounded-lg border border-line-strong text-sm font-semibold text-body shadow-xs hover:bg-canvas">Vidéo courte (Reels, TikTok)</a>
+        </div>
         <p className="text-xs leading-relaxed text-subtle">
           L&apos;IA n&apos;utilise que les informations de la fiche du bien. Plus la fiche est complète, meilleur est le texte. Relisez toujours avant de publier.
         </p>

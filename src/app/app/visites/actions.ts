@@ -104,3 +104,29 @@ export async function archiveVisitRequest(id: string): Promise<Result> {
   revalidatePath("/app/visites");
   return { ok: true };
 }
+
+/** Enregistre la signature manuscrite du bon de visite (image PNG dessinée à l'écran). */
+export async function saveVoucherSignature(visitId: string, signerName: string, dataUrl: string): Promise<Result> {
+  const s = await session();
+  if (!s) return { ok: false, error: "Indisponible en mode démo ou session expirée." };
+  const name = signerName.trim();
+  if (!name || name.length > 120) return { ok: false, error: "Indiquez le nom du signataire." };
+  const match = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
+  if (!match) return { ok: false, error: "Signature invalide." };
+  const bytes = Buffer.from(match[1], "base64");
+  if (bytes.length < 500 || bytes.length > 600_000) return { ok: false, error: "La signature est vide ou trop lourde. Recommencez." };
+
+  const { data: visit } = await s.supabase.from("visits").select("id, agency_id").eq("id", visitId).maybeSingle();
+  if (!visit) return { ok: false, error: "Visite introuvable." };
+  const path = `${visit.agency_id}/visites/${visitId}-${Date.now()}.png`;
+  const { error: upErr } = await s.supabase.storage.from("property-documents").upload(path, bytes, { contentType: "image/png" });
+  if (upErr) return { ok: false, error: "L'enregistrement de la signature a échoué. Le script 0007 a-t-il été exécuté dans Supabase ?" };
+
+  const { error } = await s.supabase
+    .from("visits")
+    .update({ voucher_signed_at: new Date().toISOString(), voucher_signer_name: name, voucher_signature_path: path })
+    .eq("id", visitId);
+  if (error) return { ok: false, error: "L'enregistrement a échoué." };
+  revalidatePath("/app/visites");
+  return { ok: true };
+}

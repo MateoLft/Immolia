@@ -6,6 +6,8 @@ import { LogoMark } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EnergyLabel } from "@/components/public/energy-label";
 import { VisitRequestForm } from "@/components/public/visit-request-form";
+import { AssistantWidget } from "@/components/public/assistant-widget";
+import { isAiConfigured } from "@/lib/ai";
 import { getPublicProperty } from "@/lib/public-property";
 import { formatEuros, formatNumber, kindLabel } from "@/lib/property-types";
 
@@ -110,7 +112,7 @@ async function PublicListing({ params }: { params: PageProps<"/b/[slug]">["param
             )}
           </div>
 
-          <aside className="flex flex-col gap-4 rounded-xl border border-line bg-white p-6 shadow-card lg:sticky lg:top-6">
+          <aside id="visite" className="flex scroll-mt-6 flex-col gap-4 rounded-xl border border-line bg-white p-6 shadow-card lg:sticky lg:top-6">
             <div>
               <h2 className="text-lg font-semibold">{sold ? "Contacter l'agence" : "Visiter ce bien"}</h2>
               <p className="mt-1 text-sm text-muted">
@@ -126,6 +128,7 @@ async function PublicListing({ params }: { params: PageProps<"/b/[slug]">["param
           <span className="flex items-center gap-1.5"><LogoMark size={16} />Page créée avec Immolia</span>
         </footer>
       </main>
+      {isAiConfigured() && !sold && <AssistantWidget slug={slug} />}
     </div>
   );
 }

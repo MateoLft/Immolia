@@ -177,7 +177,7 @@ export default function HomePage() {
             <ul className="mt-2 flex flex-col gap-3.5 text-base text-body">
               {[
                 "Textes adaptés à chaque portail et à chaque réseau social",
-                "Vidéos verticales montées automatiquement",
+                "Vidéos verticales pour Reels et TikTok",
                 "Plaquette PDF à vos couleurs",
               ].map((t) => (
                 <li key={t} className="flex gap-3">

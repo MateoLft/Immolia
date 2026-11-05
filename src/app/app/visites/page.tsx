@@ -5,7 +5,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArchiveRequestButton, CompleteVisitForm, UpcomingVisitActions } from "@/components/app/visit-actions";
-import { listNewVisitRequests, listVisitsOverview } from "@/lib/data";
+import { getAccount, listNewVisitRequests, listVisitsOverview } from "@/lib/data";
+import { SendProperty } from "@/components/app/send-property";
 import type { Visit } from "@/lib/property-types";
 
 export const metadata = { title: "Visites" };
@@ -69,7 +70,9 @@ async function Requests() {
 }
 
 async function Overview() {
-  const { upcoming, toComplete, done } = await listVisitsOverview();
+  const [{ upcoming, toComplete, done }, account] = await Promise.all([listVisitsOverview(), getAccount()]);
+  const reminder = (v: Visit) =>
+    `Bonjour${v.buyerName ? ` ${v.buyerName.split(/\s+/)[0]}` : ""},\n\nJe vous confirme notre visite de « ${v.propertyTitle} » ${dayFmt.format(new Date(v.startsAt))} à ${timeFmt.format(new Date(v.startsAt))}.\n\nÀ bientôt,\n${account.fullName} – ${account.agencyName}`;
 
   const byDay = new Map<string, Visit[]>();
   for (const v of upcoming) {
@@ -111,7 +114,13 @@ async function Overview() {
               <ul>
                 {visits.map((v) => (
                   <VisitLine key={v.id} v={v}>
-                    <UpcomingVisitActions id={v.id} voucherSigned={v.voucherSigned} />
+                    <div className="flex flex-col gap-2 sm:items-end">
+                      <UpcomingVisitActions id={v.id} voucherSigned={v.voucherSigned} />
+                      <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+                        Rappel :
+                        <SendProperty email={v.buyerEmail ?? null} phone={v.buyerPhone ?? null} subject={`Confirmation de visite : ${v.propertyTitle}`} message={reminder(v)} />
+                      </div>
+                    </div>
                   </VisitLine>
                 ))}
               </ul>

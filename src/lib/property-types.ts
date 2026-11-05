@@ -229,3 +229,29 @@ export type Mandate = {
   notes: string | null;
   createdAt: string;
 };
+
+export type EstimationRequest = {
+  id: string;
+  sellerId: string | null;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  kind: string;
+  address: string | null;
+  city: string;
+  surface: number | null;
+  rooms: number | null;
+  message: string | null;
+  status: "nouvelle" | "en-cours" | "envoyee" | "archivee";
+  priceLow: number | null;
+  priceHigh: number | null;
+  comment: string | null;
+  createdAt: string;
+};
+
+export const ESTIMATION_STATUS_LABEL: Record<EstimationRequest["status"], { label: string; tone: BadgeTone }> = {
+  nouvelle: { label: "Nouvelle", tone: "warning" },
+  "en-cours": { label: "En cours", tone: "brand" },
+  envoyee: { label: "Avis envoyé", tone: "success" },
+  archivee: { label: "Archivée", tone: "neutral" },
+};

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { AlertTriangle, Pencil, Send, Sparkles } from "lucide-react";
+import { AlertTriangle, FileText, FolderOpen, Pencil, Send, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -59,6 +59,10 @@ function PropertyHeader({ p }: { p: Property }) {
           <div className="flex flex-wrap gap-2.5">
             <ButtonLink href={`/app/biens/${p.id}/modifier`} variant="secondary"><Pencil aria-hidden className="size-4" />Modifier</ButtonLink>
             <ButtonLink href={`/app/biens/${p.id}/diffuser`} variant="secondary"><Send aria-hidden className="size-4" />Diffuser</ButtonLink>
+            <a href={`/app/biens/${p.id}/plaquette.pdf`} target="_blank" rel="noopener" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line-strong bg-white px-4 text-sm font-semibold text-body shadow-xs hover:bg-canvas">
+              <FileText aria-hidden className="size-4" />Plaquette PDF
+            </a>
+            <ButtonLink href={`/app/biens/${p.id}/dossier`} variant="secondary"><FolderOpen aria-hidden className="size-4" />Dossier de vente</ButtonLink>
             <ButtonLink href={`/app/studio/${p.id}`}><Sparkles aria-hidden className="size-4" />Studio IA</ButtonLink>
           </div>
         </div>

@@ -25,6 +25,7 @@ export function UpcomingVisitActions({ id, voucherSigned }: { id: string; vouche
   const { pending, error, run } = useAction();
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <a href={`/app/visites/${id}/bon`} className={btn}>{voucherSigned ? "Bon signé" : "Faire signer le bon"}</a>
       <label className="flex h-9 items-center gap-2 text-sm text-body">
         <input
           type="checkbox"

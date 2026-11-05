@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { DEMO_ACCOUNT, DEMO_PROPERTIES, DEMO_STATS, DEMO_VISITS } from "./mock-data";
 import type { GeneratedContent } from "./studio";
 import type { BuyerFull } from "./buyers";
+import type { PropertyDocument } from "./documents";
 import {
   ACTIVE_STATUSES,
   initialsOf,
@@ -15,6 +16,7 @@ import {
   type DashboardStats,
   type Property,
   type Buyer,
+  type EstimationRequest,
   type Listing,
   type Mandate,
   type PropertyPhoto,
@@ -562,6 +564,133 @@ export async function listMandates(): Promise<Mandate[]> {
     notes: m.notes,
     createdAt: m.created_at,
   }));
+}
+
+/** Pièces du dossier de vente d'un bien, avec un lien temporaire (1 h) vers chaque fichier. */
+export async function listDocuments(propertyId: string): Promise<PropertyDocument[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("property_documents")
+    .select("id, kind, file_name, storage_path, analysis, created_at")
+    .eq("property_id", propertyId)
+    .order("created_at");
+  const rows = data ?? [];
+  const urls = new Map<string, string>();
+  if (rows.length > 0) {
+    const { data: signed } = await supabase.storage.from("property-documents").createSignedUrls(rows.map((r) => r.storage_path), 3600);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    fileName: r.file_name,
+    url: urls.get(r.storage_path) ?? null,
+    analysis: r.analysis,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Nombre de pièces déposées par bien (vue d'ensemble des dossiers). */
+export async function countDocumentsByProperty(): Promise<Map<string, Set<string>>> {
+  const map = new Map<string, Set<string>>();
+  if (!isSupabaseConfigured) return map;
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("property_documents").select("property_id, kind").limit(10000);
+  for (const r of data ?? []) {
+    if (!map.has(r.property_id)) map.set(r.property_id, new Set());
+    map.get(r.property_id)!.add(r.kind);
+  }
+  return map;
+}
+
+type EstimationRow = {
+  id: string;
+  seller_id: string | null;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  property_type: string;
+  address: string | null;
+  city: string;
+  surface_m2: number | string | null;
+  rooms: number | null;
+  message: string | null;
+  status: EstimationRequest["status"];
+  price_low: number | null;
+  price_high: number | null;
+  comment: string | null;
+  created_at: string;
+};
+
+const toEstimation = (r: EstimationRow): EstimationRequest => ({
+  id: r.id,
+  sellerId: r.seller_id,
+  fullName: r.full_name,
+  email: r.email,
+  phone: r.phone,
+  kind: r.property_type,
+  address: r.address,
+  city: r.city,
+  surface: r.surface_m2 === null ? null : Number(r.surface_m2),
+  rooms: r.rooms,
+  message: r.message,
+  status: r.status,
+  priceLow: r.price_low,
+  priceHigh: r.price_high,
+  comment: r.comment,
+  createdAt: r.created_at,
+});
+
+export async function listEstimationRequests(): Promise<EstimationRequest[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("estimation_requests").select("*").neq("status", "archivee").order("created_at", { ascending: false }).limit(500);
+  return ((data ?? []) as EstimationRow[]).map(toEstimation);
+}
+
+export async function getEstimationRequest(id: string): Promise<EstimationRequest | null> {
+  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("estimation_requests").select("*").eq("id", id).maybeSingle();
+  return data ? toEstimation(data as EstimationRow) : null;
+}
+
+/** Adresse publique (slug) de l'agence pour la page d'estimation, sans la créer. */
+export async function getAgencySlug(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { supabase, userId } = await getSession();
+  const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", userId).single();
+  const { data } = await supabase.from("agencies").select("public_slug").eq("id", profile?.agency_id ?? "").maybeSingle();
+  return data?.public_slug ?? null;
+}
+
+export type VisitDetail = Visit & {
+  propertyAddress: string | null;
+  propertyCity: string;
+  propertyKind: string;
+  signerName: string | null;
+  signaturePath: string | null;
+};
+
+export async function getVisit(id: string): Promise<VisitDetail | null> {
+  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("visits")
+    .select("id, starts_at, status, property_id, voucher_signed_at, voucher_signer_name, voucher_signature_path, feedback, properties(title, address, city, property_type), buyers(full_name, phone, email)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return null;
+  const prop = one(data.properties as unknown as { title: string; address: string | null; city: string; property_type: string } | null);
+  return {
+    ...toVisit(data as unknown as VisitRow),
+    propertyAddress: prop?.address ?? null,
+    propertyCity: prop?.city ?? "",
+    propertyKind: prop?.property_type ?? "",
+    signerName: (data as { voucher_signer_name?: string | null }).voucher_signer_name ?? null,
+    signaturePath: (data as { voucher_signature_path?: string | null }).voucher_signature_path ?? null,
+  };
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {
