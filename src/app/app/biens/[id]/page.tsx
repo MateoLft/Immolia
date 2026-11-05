@@ -8,7 +8,9 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpcomingVisits } from "@/components/app/upcoming-visits";
 import QRCode from "qrcode";
-import { getProperty, listGeneratedContents, listListings, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { getAccount, getProperty, listBuyersFull, listGeneratedContents, listListings, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { SCORE_LABEL, matches, propertyPitch } from "@/lib/buyers";
+import { SendProperty } from "@/components/app/send-property";
 import { PORTALS } from "@/lib/portals";
 import { publicPropertyPath, siteUrl } from "@/lib/site-url";
 import { PublicationCard } from "@/components/app/publication-card";
@@ -70,12 +72,16 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
   const p = await getProperty(id);
   if (!p) notFound();
 
-  const [photos, contents, base, listings] = await Promise.all([
+  const [photos, contents, base, listings, buyers, account] = await Promise.all([
     listPropertyPhotos(p.id),
     listGeneratedContents(p.id),
     siteUrl(),
     listListings(p.id),
+    listBuyersFull(),
+    getAccount(),
   ]);
+  const scoreOrder = { prioritaire: 0, qualifie: 1, "a-qualifier": 2 };
+  const matchingBuyers = buyers.filter((b) => matches(b, p)).sort((a, b) => scoreOrder[a.score] - scoreOrder[b.score]);
   const liveListings = listings.filter((l) => l.status === "publie");
   const mustRemove = OFF_MARKET_STATUSES.includes(p.status) && liveListings.length > 0;
   const portalName = (id: string) => PORTALS.find((x) => x.id === id)?.name ?? id;
@@ -186,6 +192,36 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
               </div>
             </div>
             <p className="border-t border-line px-5 py-3 text-[13px] text-muted">Ajouté le {dateFr(p.createdAt)}</p>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title={`Acquéreurs correspondants (${matchingBuyers.length})`}
+              action={<Link href="/app/acquereurs/nouveau" className="text-[13px] font-semibold text-brand-700">Ajouter</Link>}
+            />
+            {matchingBuyers.length === 0 ? (
+              <p className="px-5 py-5 text-sm text-muted">Aucun acquéreur en recherche ne correspond à ce bien pour l&apos;instant.</p>
+            ) : (
+              <ul className="px-5 py-2">
+                {matchingBuyers.slice(0, 8).map((b) => (
+                  <li key={b.id} className="flex flex-col gap-2 border-b border-hover py-3 last:border-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <Link href={`/app/acquereurs/${b.id}`} className="text-sm font-semibold hover:text-brand-700">{b.fullName}</Link>
+                      <Badge tone={SCORE_LABEL[b.score].tone}>{SCORE_LABEL[b.score].label}</Badge>
+                    </div>
+                    <SendProperty
+                      email={b.email}
+                      phone={b.phone}
+                      subject={`Un bien pour vous : ${p.title}`}
+                      message={`${propertyPitch(p, p.published ? publicUrl : null, b.fullName.split(/\s+/)[0])}\n\n${account.fullName} – ${account.agencyName}`}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!p.published && matchingBuyers.length > 0 && (
+              <p className="border-t border-line px-5 py-3 text-[13px] text-muted">Publiez la page publique pour envoyer un lien avec les photos.</p>
+            )}
           </Card>
 
           <Card>

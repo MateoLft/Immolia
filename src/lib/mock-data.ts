@@ -15,6 +15,7 @@ export const DEMO_ACCOUNT: Account = {
   trialDaysLeft: 9,
   trialDays: 14,
   demo: true,
+  feeText: null,
 };
 
 const base = {
@@ -27,6 +28,7 @@ const base = {
   published: false,
   publicSlug: null,
   publicDescription: null,
+  sellerId: null,
 };
 
 export const DEMO_PROPERTIES: Property[] = [

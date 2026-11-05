@@ -3,7 +3,7 @@
 import { useActionState, type ReactNode } from "react";
 import clsx from "clsx";
 import { createProperty, updateProperty, type PropertyFormState } from "@/app/app/biens/actions";
-import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES, type Property } from "@/lib/property-types";
+import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES, type Property, type Seller } from "@/lib/property-types";
 import { ButtonLink } from "@/components/ui/button";
 
 const inputClasses =
@@ -90,10 +90,11 @@ function toValues(p: Property): Record<string, string> {
     mandate_end: s(p.mandateEnd),
     reference: s(p.reference),
     status: p.status,
+    seller_id: p.sellerId ?? "",
   };
 }
 
-export function PropertyForm({ property }: { property?: Property }) {
+export function PropertyForm({ property, sellers = [] }: { property?: Property; sellers?: Seller[] }) {
   const formAction = property ? updateProperty.bind(null, property.id) : createProperty;
   const [state, action, pending] = useActionState<PropertyFormState, FormData>(formAction, {});
   const e = state.fieldErrors ?? {};
@@ -169,6 +170,12 @@ export function PropertyForm({ property }: { property?: Property }) {
         </Field>
         <Field label="Référence interne" name="reference">
           <Input name="reference" defaultValue={v.reference} placeholder="Ex. : IMM-2026-001" />
+        </Field>
+        <Field label="Vendeur" name="seller_id" hint="Pour le rapport vendeur et le registre des mandats" className="sm:col-span-2">
+          <Select name="seller_id" defaultValue={v.seller_id ?? ""}>
+            <option value={property?.sellerId ? "none" : ""}>{sellers.length === 0 ? "Aucun vendeur enregistré" : "Non renseigné"}</option>
+            {sellers.map((s) => <option key={s.id} value={s.id}>{s.fullName}</option>)}
+          </Select>
         </Field>
         <Field label="Statut" name="status">
           <Select name="status" defaultValue={v.status ?? "brouillon"}>

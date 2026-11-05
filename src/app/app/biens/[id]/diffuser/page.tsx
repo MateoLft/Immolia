@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DiffusionWorkspace } from "@/components/app/diffusion-workspace";
-import { getProperty, listGeneratedContents, listListings, listPropertyPhotos } from "@/lib/data";
+import { getAccount, getProperty, listGeneratedContents, listListings, listPropertyPhotos } from "@/lib/data";
 import { PORTALS, portalFacts, portalText, portalTitle } from "@/lib/portals";
 
 export const metadata = { title: "Diffuser l'annonce" };
@@ -12,7 +12,7 @@ async function Workspace({ params }: { params: PageProps<"/app/biens/[id]/diffus
   const { id } = await params;
   const p = await getProperty(id);
   if (!p) notFound();
-  const [contents, listings, photos] = await Promise.all([listGeneratedContents(p.id), listListings(p.id), listPropertyPhotos(p.id)]);
+  const [contents, listings, photos, account] = await Promise.all([listGeneratedContents(p.id), listListings(p.id), listPropertyPhotos(p.id), getAccount()]);
 
   // Texte de base : celui de la page publique, sinon la dernière annonce du Studio IA.
   const base = p.publicDescription ?? contents.find((c) => c.kind === "annonce")?.content ?? "";
@@ -24,7 +24,7 @@ async function Workspace({ params }: { params: PageProps<"/app/biens/[id]/diffus
     titleMax: portal.titleMax,
     textMax: portal.textMax,
     title: portalTitle(p, portal),
-    text: base ? portalText(base, p, portal) : "",
+    text: base ? portalText(base, p, portal, account.feeText) : "",
     facts: portalFacts(p),
   }));
 

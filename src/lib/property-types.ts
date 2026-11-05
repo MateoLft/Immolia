@@ -65,6 +65,19 @@ export type Property = {
   publicSlug: string | null;
   /** Texte affiché sur la page publique (distinct des notes internes). */
   publicDescription: string | null;
+  sellerId: string | null;
+};
+
+export type Seller = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  isProspect: boolean;
+  nextContactOn: string | null;
+  createdAt: string;
 };
 
 export type PropertyPhoto = {
@@ -123,7 +136,28 @@ export type Account = {
   trialDaysLeft: number;
   trialDays: number;
   demo: boolean;
+  /** Mention honoraires par défaut (Paramètres), sinon null. */
+  feeText: string | null;
 };
+
+export type Settings = {
+  fullName: string;
+  phone: string;
+  email: string;
+  role: string;
+  agency: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    professionalCard: string;
+    siren: string;
+    feeText: string;
+  };
+  canEditAgency: boolean;
+};
+
+export const DEFAULT_FEE_TEXT = "Honoraires : [À COMPLÉTER]";
 
 export type DashboardStats = {
   activeProperties: number;
@@ -169,3 +203,29 @@ export type Listing = {
 
 /** Statuts pour lesquels les annonces doivent être retirées des portails. */
 export const OFF_MARKET_STATUSES: PropertyStatus[] = ["compromis", "vendu", "archive"];
+
+export type MandateStatus = "en-cours" | "vendu" | "expire" | "resilie";
+
+export const MANDATE_STATUS_LABEL: Record<MandateStatus, { label: string; tone: BadgeTone }> = {
+  "en-cours": { label: "En cours", tone: "brand" },
+  vendu: { label: "Vendu", tone: "success" },
+  expire: { label: "Expiré", tone: "neutral" },
+  resilie: { label: "Résilié", tone: "neutral" },
+};
+
+export type Mandate = {
+  id: string;
+  number: number;
+  propertyId: string | null;
+  sellerId: string | null;
+  sellerName: string;
+  propertyLabel: string;
+  type: MandateType;
+  signedOn: string;
+  endsOn: string | null;
+  price: number | null;
+  feeText: string | null;
+  status: MandateStatus;
+  notes: string | null;
+  createdAt: string;
+};

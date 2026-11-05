@@ -46,14 +46,16 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Visites : créneaux réservables directement par l'acquéreur | ⬜ | |
 | Bon de visite : suivi « signé » | ✅ | |
 | Bon de visite signé électroniquement (document + signature) | ⬜ | |
-| Paramètres : profil, marque, abonnement, factures | ⬜ | |
+| Paramètres : profil, téléphone, agence, carte pro, mention honoraires | ✅ | |
+| Paramètres : logo, couleurs, factures | ⬜ | |
 
 ## Étape 3 — Offre « Pro »
 
 | Page | État | Maquette |
 |---|---|---|
-| Rapport vendeur hebdomadaire (email automatique) | ⬜ | 🎨 |
-| Acquéreurs : liste, fiches, score de qualification | ⬜ | |
+| Vendeurs : fiches, prospects, relances, rapport hebdomadaire prêt à envoyer | ✅ | 🎨 |
+| Rapport vendeur envoyé automatiquement chaque lundi | ⬜ (service email + domaine) | |
+| Acquéreurs : liste, fiches, critères, score, rapprochement automatique avec les biens, envoi email/WhatsApp/SMS | ✅ | |
 | Assistant IA acquéreurs (site et WhatsApp) | ⬜ | |
 | Widget d'estimation en marque blanche + rapport PDF | ⬜ | |
 | Vidéos courtes automatiques | ⬜ | 🎨 |
@@ -63,8 +65,8 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 
 | Page | État |
 |---|---|
-| Détection d'opportunités de mandats | ⬜ |
-| Registre des mandats et alertes d'échéance | ⬜ |
+| Détection d'opportunités de mandats | ❌ remplacée par le suivi des prospects vendeurs (collecte d'annonces de particuliers non autorisée) |
+| Registre des mandats numéroté (non supprimable), alertes d'échéance, export CSV, impression | ✅ |
 | Dossier de vente : pièces, relances, résumé des PV d'AG | ⬜ |
 | Conformité anti-blanchiment (LCB-FT) | ⬜ |
 | Équipe, rôles et tableau de bord manager | ⬜ |

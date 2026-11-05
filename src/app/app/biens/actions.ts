@@ -71,6 +71,10 @@ function parsePropertyForm(form: FormData): ParsedForm {
     mandate_end: str(form, "mandate_end"),
     description: str(form, "description"),
   };
+  // Lien vers le vendeur (ajouté seulement s'il est renseigné ou explicitement retiré).
+  const sellerId = str(form, "seller_id");
+  if (sellerId && /^[0-9a-f-]{36}$/i.test(sellerId)) Object.assign(row, { seller_id: sellerId });
+  else if (form.get("seller_id") === "none") Object.assign(row, { seller_id: null });
 
   if (Object.keys(errors).length > 0) {
     return { ok: false, state: { error: "Merci de corriger les champs indiqués.", fieldErrors: errors, values } };

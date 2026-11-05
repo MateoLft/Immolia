@@ -25,7 +25,7 @@ Règles impératives :
 - N'utilise que les informations fournies sur le bien. N'invente jamais une caractéristique, une distance, un équipement, une vue, un quartier ou un chiffre qui n'est pas donné. Si une information manque, n'en parle pas.
 - Ne mentionne ni l'adresse exacte ni le numéro de rue, même s'ils sont fournis : seulement la ville ou le quartier.
 - Respecte la loi : pas de discrimination, pas de promesse de rentabilité, pas d'affirmation trompeuse.
-- Pour les annonces destinées aux portails, termine par une ligne de mentions avec la classe énergie (DPE) et la classe climat (GES) si elles sont fournies, sinon « DPE : en cours ». Ajoute « Honoraires : [À COMPLÉTER] » pour que l'agent indique qui les paie.
+- Pour les annonces destinées aux portails, termine par une ligne de mentions avec la classe énergie (DPE) et la classe climat (GES) si elles sont fournies, sinon « DPE : en cours ». Ajoute ensuite la mention honoraires fournie dans les informations ; si aucune n'est fournie, écris « Honoraires : [À COMPLÉTER] » pour que l'agent la complète.
 - Si des photos du bien sont jointes, sers-t'en pour décrire l'ambiance, la luminosité, le style, les matériaux et l'état apparent, uniquement pour ce qui est clairement visible. Ne déduis jamais des photos une surface, un nombre de pièces, une vue, une exposition ou un équipement incertain. En cas de contradiction, les informations écrites priment.
 - Réponds uniquement avec le texte final, sans introduction, sans commentaire, sans titre du type « Voici l'annonce », et sans mise en forme Markdown (pas d'astérisques ni de dièses), sauf les hashtags des réseaux sociaux.`;
 
@@ -46,9 +46,10 @@ const TONE_INSTRUCTIONS: Record<Tone, string> = {
   dynamique: "Ton dynamique et enthousiaste : phrases courtes, rythme vif, sentiment d'opportunité.",
 };
 
-function describeProperty(p: Property, agencyName: string) {
+function describeProperty(p: Property, agencyName: string, feeText: string | null) {
   const lines: [string, string | number | null][] = [
     ["Agence", agencyName],
+    ["Mention honoraires", feeText],
     ["Titre", p.title],
     ["Type de bien", kindLabel(p.kind)],
     ["Ville", [p.postalCode, p.city].filter(Boolean).join(" ")],
@@ -82,13 +83,14 @@ export async function generatePropertyContent(
   kind: ContentKind,
   tone: Tone,
   photoUrls: string[] = [],
+  feeText: string | null = null,
 ): Promise<GenerationResult> {
   if (!isAiConfigured()) {
     return { ok: false, error: "Le Studio IA n'est pas encore activé : la clé ANTHROPIC_API_KEY est manquante." };
   }
 
   const photos = photoUrls.slice(0, MAX_AI_PHOTOS);
-  const instructions = `Informations sur le bien :\n<bien>\n${describeProperty(property, agencyName)}\n</bien>\n\nConsigne : ${KIND_INSTRUCTIONS[kind]}\n${TONE_INSTRUCTIONS[tone]}`;
+  const instructions = `Informations sur le bien :\n<bien>\n${describeProperty(property, agencyName, feeText)}\n</bien>\n\nConsigne : ${KIND_INSTRUCTIONS[kind]}\n${TONE_INSTRUCTIONS[tone]}`;
 
   const call = (withPhotos: string[]) => {
     const content: Anthropic.Beta.BetaContentBlockParam[] = [

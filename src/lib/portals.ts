@@ -1,4 +1,4 @@
-import { formatEuros, formatNumber, kindLabel, type Property } from "./property-types";
+import { DEFAULT_FEE_TEXT, formatEuros, formatNumber, kindLabel, type Property } from "./property-types";
 
 /**
  * Portails proposés dans la diffusion assistée.
@@ -71,14 +71,14 @@ export function portalTitle(p: Property, portal: Portal) {
 }
 
 /** Mentions à faire figurer dans l'annonce (DPE, GES, honoraires). */
-export function legalMentions(p: Property) {
+export function legalMentions(p: Property, feeText: string | null = null) {
   const energy = p.dpe ? `DPE : classe ${p.dpe}${p.ges ? ` – GES : classe ${p.ges}` : ""}.` : "DPE : en cours.";
   const charges = p.annualCharges ? ` Charges de copropriété : ${formatEuros(p.annualCharges)} par an.` : "";
-  return `${energy}${charges} Honoraires : [À COMPLÉTER].`;
+  return `${energy}${charges} ${feeText ?? DEFAULT_FEE_TEXT}`;
 }
 
-export function portalText(base: string, p: Property, portal: Portal) {
-  const mentions = legalMentions(p);
+export function portalText(base: string, p: Property, portal: Portal, feeText: string | null = null) {
+  const mentions = legalMentions(p, feeText);
   // Si le texte contient déjà les mentions (annonce du Studio IA), on ne les ajoute pas une deuxième fois.
   const body = /DPE\s*:/i.test(base) ? base.trim() : `${base.trim()}\n\n${mentions}`.trim();
   return cut(body, portal.textMax);

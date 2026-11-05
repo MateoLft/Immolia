@@ -5,14 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { DEMO_ACCOUNT, DEMO_PROPERTIES, DEMO_STATS, DEMO_VISITS } from "./mock-data";
 import type { GeneratedContent } from "./studio";
+import type { BuyerFull } from "./buyers";
 import {
   ACTIVE_STATUSES,
   initialsOf,
   type Account,
+  type Seller,
+  type Settings,
   type DashboardStats,
   type Property,
   type Buyer,
   type Listing,
+  type Mandate,
   type PropertyPhoto,
   type Visit,
   type VisitRequest,
@@ -49,6 +53,9 @@ export const getAccount = cache(async (): Promise<Account> => {
   const agency = one(profile?.agencies) as { name: string; subscriptions: unknown } | null;
   const sub = one(agency?.subscriptions) as { plan: Account["plan"]; status: string; trial_ends_at: string } | null;
 
+  // Lu à part : la colonne n'existe qu'après la migration 0006 (une erreur ici ne doit rien casser).
+  const { data: fee } = await supabase.from("agencies").select("fee_text").eq("id", profile?.agency_id ?? "").maybeSingle();
+
   const fullName = profile?.full_name?.trim() || "Mon compte";
   const msLeft = sub ? new Date(sub.trial_ends_at).getTime() - Date.now() : 0;
 
@@ -62,8 +69,48 @@ export const getAccount = cache(async (): Promise<Account> => {
     trialDaysLeft: Math.max(0, Math.ceil(msLeft / 86_400_000)),
     trialDays: TRIAL_DAYS,
     demo: false,
+    feeText: fee?.fee_text?.trim() || null,
   };
 });
+
+export async function getSettings(): Promise<Settings> {
+  if (!isSupabaseConfigured) {
+    return {
+      fullName: DEMO_ACCOUNT.fullName,
+      phone: "",
+      email: "demo@immolia.fr",
+      role: "owner",
+      agency: { name: DEMO_ACCOUNT.agencyName, address: "", phone: "", email: "", professionalCard: "", siren: "", feeText: "" },
+      canEditAgency: false,
+    };
+  }
+  const { supabase, userId } = await getSession();
+  const [{ data: profile }, { data: auth }] = await Promise.all([
+    supabase.from("profiles").select("full_name, phone, role, agency_id").eq("id", userId).single(),
+    supabase.auth.getUser(),
+  ]);
+  const { data: agency } = await supabase
+    .from("agencies")
+    .select("name, address, phone, email, professional_card, siren, fee_text")
+    .eq("id", profile?.agency_id ?? "")
+    .maybeSingle();
+  return {
+    fullName: profile?.full_name ?? "",
+    phone: profile?.phone ?? "",
+    email: auth.user?.email ?? "",
+    role: profile?.role ?? "agent",
+    agency: {
+      name: agency?.name ?? "",
+      address: agency?.address ?? "",
+      phone: agency?.phone ?? "",
+      email: agency?.email ?? "",
+      professionalCard: agency?.professional_card ?? "",
+      siren: agency?.siren ?? "",
+      feeText: agency?.fee_text ?? "",
+    },
+    canEditAgency: profile?.role === "owner" || profile?.role === "manager",
+  };
+}
 
 type PropertyRow = {
   id: string;
@@ -90,6 +137,7 @@ type PropertyRow = {
   published: boolean;
   public_slug: string | null;
   public_description: string | null;
+  seller_id?: string | null;
   visits?: { count: number }[];
   property_photos?: { storage_path: string; position: number }[];
 };
@@ -153,6 +201,7 @@ function toProperty(r: PropertyRow, coverUrl: string | null = null): Property {
     published: r.published ?? false,
     publicSlug: r.public_slug ?? null,
     publicDescription: r.public_description ?? null,
+    sellerId: r.seller_id ?? null,
   };
 }
 
@@ -373,6 +422,146 @@ export async function listGeneratedContents(propertyId: string, limit = 20): Pro
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []).map((r) => ({ id: r.id, kind: r.kind, tone: r.tone, content: r.content, createdAt: r.created_at }));
+}
+
+type BuyerRow = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  budget_max_eur: number | null;
+  financing: string | null;
+  score: BuyerFull["score"];
+  notes: string | null;
+  cities: string[] | null;
+  kinds: string[] | null;
+  min_surface_m2: number | string | null;
+  min_rooms: number | null;
+  status: BuyerFull["status"] | null;
+  source: string | null;
+  created_at: string;
+};
+
+function toBuyer(r: BuyerRow): BuyerFull {
+  return {
+    id: r.id,
+    fullName: r.full_name,
+    email: r.email,
+    phone: r.phone,
+    budgetMax: r.budget_max_eur,
+    financing: r.financing,
+    score: r.score,
+    notes: r.notes,
+    cities: r.cities ?? [],
+    kinds: r.kinds ?? [],
+    minSurface: r.min_surface_m2 === null || r.min_surface_m2 === undefined ? null : Number(r.min_surface_m2),
+    minRooms: r.min_rooms,
+    status: r.status ?? "actif",
+    source: r.source,
+    createdAt: r.created_at,
+  };
+}
+
+/** Acquéreurs avec leurs critères (module Acquéreurs et rapprochement). */
+export async function listBuyersFull(): Promise<BuyerFull[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("buyers").select("*").order("created_at", { ascending: false }).limit(1000);
+  return ((data ?? []) as BuyerRow[]).map(toBuyer);
+}
+
+export async function getBuyer(id: string): Promise<BuyerFull | null> {
+  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("buyers").select("*").eq("id", id).maybeSingle();
+  return data ? toBuyer(data as BuyerRow) : null;
+}
+
+/** Toutes les visites d'un acquéreur, les plus récentes d'abord. */
+export async function listBuyerVisits(buyerId: string): Promise<Visit[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("visits")
+    .select(VISIT_SELECT)
+    .eq("buyer_id", buyerId)
+    .order("starts_at", { ascending: false })
+    .limit(50);
+  return ((data ?? []) as VisitRow[]).map(toVisit);
+}
+
+type SellerRow = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  is_prospect: boolean;
+  next_contact_on: string | null;
+  created_at: string;
+};
+
+const toSeller = (r: SellerRow): Seller => ({
+  id: r.id,
+  fullName: r.full_name,
+  email: r.email,
+  phone: r.phone,
+  address: r.address,
+  notes: r.notes,
+  isProspect: r.is_prospect,
+  nextContactOn: r.next_contact_on,
+  createdAt: r.created_at,
+});
+
+export async function listSellers(): Promise<Seller[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("sellers").select("*").order("full_name").limit(1000);
+  return ((data ?? []) as SellerRow[]).map(toSeller);
+}
+
+export async function getSeller(id: string): Promise<Seller | null> {
+  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("sellers").select("*").eq("id", id).maybeSingle();
+  return data ? toSeller(data as SellerRow) : null;
+}
+
+/** Toutes les visites d'un bien (pour le rapport vendeur). */
+export async function listPropertyVisits(propertyId: string): Promise<Visit[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("visits")
+    .select(VISIT_SELECT)
+    .eq("property_id", propertyId)
+    .order("starts_at", { ascending: false })
+    .limit(200);
+  return ((data ?? []) as VisitRow[]).map(toVisit);
+}
+
+/** Registre des mandats, du plus récent au plus ancien. */
+export async function listMandates(): Promise<Mandate[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("mandates").select("*").order("number", { ascending: false }).limit(5000);
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    number: m.number,
+    propertyId: m.property_id,
+    sellerId: m.seller_id,
+    sellerName: m.seller_name,
+    propertyLabel: m.property_label,
+    type: m.type,
+    signedOn: m.signed_on,
+    endsOn: m.ends_on,
+    price: m.price_eur,
+    feeText: m.fee_text,
+    status: m.status,
+    notes: m.notes,
+    createdAt: m.created_at,
+  }));
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {

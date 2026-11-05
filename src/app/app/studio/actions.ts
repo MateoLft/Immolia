@@ -20,7 +20,7 @@ export async function generateContent(propertyId: string, kind: string, tone: st
 
   const photoUrls = usePhotos ? (await listPropertyPhotos(property.id)).slice(0, MAX_AI_PHOTOS).map((p) => p.url) : [];
 
-  const result = await generatePropertyContent(property, account.agencyName, kind, tone, photoUrls);
+  const result = await generatePropertyContent(property, account.agencyName, kind, tone, photoUrls, account.feeText);
   if (!result.ok) return result;
   const photoInfo = { usedPhotos: result.usedPhotos, photosRequested: photoUrls.length };
 

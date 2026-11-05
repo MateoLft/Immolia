@@ -84,7 +84,7 @@ export function Sidebar({ account }: { account: Account | null }) {
   }, [open]);
 
   return (
-    <aside className="flex w-full flex-col border-b border-line bg-white px-4 py-4 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:flex-none lg:gap-6 lg:overflow-y-auto lg:border-r lg:border-b-0 lg:py-5">
+    <aside className="flex w-full flex-col border-b border-line bg-white px-4 py-4 print:hidden lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:flex-none lg:gap-6 lg:overflow-y-auto lg:border-r lg:border-b-0 lg:py-5">
       <div className="flex items-center justify-between px-2">
         <Logo href="/app" />
         <button
