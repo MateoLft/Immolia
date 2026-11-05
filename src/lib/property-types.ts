@@ -59,6 +59,14 @@ export type Property = {
   views: number;
   visitsCount: number;
   createdAt: string;
+  /** URL temporaire de la photo principale, si le bien en a une. */
+  coverUrl: string | null;
+};
+
+export type PropertyPhoto = {
+  id: string;
+  url: string;
+  position: number;
 };
 
 export type Visit = {

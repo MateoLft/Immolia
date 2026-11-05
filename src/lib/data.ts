@@ -11,6 +11,7 @@ import {
   type Account,
   type DashboardStats,
   type Property,
+  type PropertyPhoto,
   type Visit,
 } from "./property-types";
 
@@ -84,9 +85,41 @@ type PropertyRow = {
   views_count: number;
   created_at: string;
   visits?: { count: number }[];
+  property_photos?: { storage_path: string; position: number }[];
 };
 
-function toProperty(r: PropertyRow): Property {
+const PHOTOS_BUCKET = "property-photos";
+const SIGNED_URL_SECONDS = 60 * 60;
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/** URLs temporaires (1 h) pour des photos du stockage privé. */
+async function signPaths(supabase: Supabase, paths: string[]) {
+  const urls = new Map<string, string>();
+  if (paths.length === 0) return urls;
+  const { data } = await supabase.storage.from(PHOTOS_BUCKET).createSignedUrls(paths, SIGNED_URL_SECONDS);
+  for (const item of data ?? []) {
+    if (item.path && item.signedUrl) urls.set(item.path, item.signedUrl);
+  }
+  return urls;
+}
+
+function coverPath(r: PropertyRow) {
+  const photos = r.property_photos ?? [];
+  if (photos.length === 0) return null;
+  return photos.reduce((a, b) => (b.position < a.position ? b : a)).storage_path;
+}
+
+async function toPropertiesWithCovers(supabase: Supabase, rows: PropertyRow[]) {
+  const paths = rows.map(coverPath).filter((p): p is string => p !== null);
+  const urls = await signPaths(supabase, paths);
+  return rows.map((r) => {
+    const path = coverPath(r);
+    return toProperty(r, path ? (urls.get(path) ?? null) : null);
+  });
+}
+
+function toProperty(r: PropertyRow, coverUrl: string | null = null): Property {
   return {
     id: r.id,
     reference: r.reference,
@@ -110,6 +143,7 @@ function toProperty(r: PropertyRow): Property {
     views: r.views_count,
     visitsCount: r.visits?.[0]?.count ?? 0,
     createdAt: r.created_at,
+    coverUrl,
   };
 }
 
@@ -118,21 +152,27 @@ export async function listProperties({ limit }: { limit?: number } = {}): Promis
   const { supabase } = await getSession();
   let query = supabase
     .from("properties")
-    .select("*, visits(count)")
+    .select("*, visits(count), property_photos(storage_path, position)")
     .neq("status", "archive")
     .order("created_at", { ascending: false });
   if (limit) query = query.limit(limit);
   const { data, error } = await query;
   if (error) throw new Error(`Lecture des biens impossible : ${error.message}`);
-  return (data as PropertyRow[]).map(toProperty);
+  return toPropertiesWithCovers(supabase, data as PropertyRow[]);
 }
 
 export async function getProperty(id: string): Promise<Property | null> {
   if (!isSupabaseConfigured) return DEMO_PROPERTIES.find((p) => p.id === id) ?? null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const { supabase } = await getSession();
-  const { data } = await supabase.from("properties").select("*, visits(count)").eq("id", id).maybeSingle();
-  return data ? toProperty(data as PropertyRow) : null;
+  const { data } = await supabase
+    .from("properties")
+    .select("*, visits(count), property_photos(storage_path, position)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!data) return null;
+  const [property] = await toPropertiesWithCovers(supabase, [data as PropertyRow]);
+  return property;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -197,6 +237,22 @@ export async function listUpcomingVisits({ propertyId, limit = 5 }: { propertyId
   if (propertyId) query = query.eq("property_id", propertyId);
   const { data } = await query;
   return ((data ?? []) as VisitRow[]).map(toVisit);
+}
+
+/** Photos d'un bien, dans l'ordre (la première est la photo principale). */
+export async function listPropertyPhotos(propertyId: string): Promise<PropertyPhoto[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("property_photos")
+    .select("id, storage_path, position")
+    .eq("property_id", propertyId)
+    .order("position");
+  const rows = data ?? [];
+  const urls = await signPaths(supabase, rows.map((r) => r.storage_path));
+  return rows
+    .map((r) => ({ id: r.id, position: r.position, url: urls.get(r.storage_path) ?? "" }))
+    .filter((p) => p.url);
 }
 
 /** Contenus générés par le Studio IA pour un bien, du plus récent au plus ancien. */

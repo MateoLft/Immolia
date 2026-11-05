@@ -32,7 +32,7 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Liste des biens | ✅ | |
 | Fiche d'un bien | ✅ (sans photos) | 🎨 |
 | Modifier / archiver un bien | ✅ (archiver = statut « Archivé ») | |
-| Photos des biens (stockage Supabase) | ⬜ | |
+| Photos des biens (stockage Supabase privé, compression, photo principale) | ✅ | |
 | Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
 | Page publique du bien + QR code | ⬜ | |
 | Studio IA : annonce portails, annonce courte, posts Instagram / Facebook | ✅ | 🎨 |

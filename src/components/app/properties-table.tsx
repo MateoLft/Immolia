@@ -26,7 +26,7 @@ export function PropertiesTable({ properties }: { properties: Property[] }) {
             <tr key={p.id} className="border-t border-line hover:bg-canvas">
               <td className="px-5 py-3.5">
                 <Link href={`/app/biens/${p.id}`} className="flex items-center gap-3">
-                  <PropertyThumb tint={tintFor(p.id)} className="h-9 w-11" />
+                  <PropertyThumb tint={tintFor(p.id)} src={p.coverUrl} className="h-9 w-11" />
                   <span>
                     <span className="block font-semibold">{p.title}</span>
                     <span className="block text-[13px] text-muted">

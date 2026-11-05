@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ImagePlus, Pencil, Sparkles } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpcomingVisits } from "@/components/app/upcoming-visits";
-import { getProperty, listUpcomingVisits } from "@/lib/data";
+import { getProperty, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { PhotoManager } from "@/components/app/photo-manager";
 import {
   STATUS_LABEL,
   formatEuros,
   formatNumber,
   kindLabel,
   mandateLabel,
-  tintFor,
   type Property,
 } from "@/lib/property-types";
 
@@ -80,10 +80,7 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
       <PropertyHeader p={p} />
       <div className="mx-auto grid max-w-7xl items-start gap-6 px-5 py-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl text-center" style={{ background: tintFor(p.id) }}>
-            <ImagePlus aria-hidden className="size-7 text-body" strokeWidth={1.6} />
-            <p className="text-sm font-semibold text-body">Photos : bientôt disponible</p>
-          </div>
+          <PhotoManager propertyId={p.id} photos={await listPropertyPhotos(p.id)} />
 
           <Card>
             <CardHeader title="Caractéristiques" />

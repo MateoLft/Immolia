@@ -29,7 +29,7 @@ async function PropertyPicker() {
             href={`/app/studio/${p.id}`}
             className="flex items-center gap-3.5 rounded-xl border border-line bg-white p-4 shadow-card hover:border-brand-600"
           >
-            <PropertyThumb tint={tintFor(p.id)} className="h-12 w-14" />
+            <PropertyThumb tint={tintFor(p.id)} src={p.coverUrl} className="h-12 w-14" />
             <span className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{p.title}</span>
               <span className="mt-1 flex items-center gap-2 text-[13px] text-muted">
