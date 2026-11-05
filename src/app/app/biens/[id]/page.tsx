@@ -7,7 +7,10 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpcomingVisits } from "@/components/app/upcoming-visits";
-import { getProperty, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import QRCode from "qrcode";
+import { getProperty, listGeneratedContents, listPropertyPhotos, listUpcomingVisits } from "@/lib/data";
+import { publicPropertyPath, siteUrl } from "@/lib/site-url";
+import { PublicationCard } from "@/components/app/publication-card";
 import { PhotoManager } from "@/components/app/photo-manager";
 import {
   STATUS_LABEL,
@@ -64,6 +67,16 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
   const p = await getProperty(id);
   if (!p) notFound();
 
+  const [photos, contents, base] = await Promise.all([listPropertyPhotos(p.id), listGeneratedContents(p.id), siteUrl()]);
+  const publicUrl = p.publicSlug ? `${base}${publicPropertyPath(p.publicSlug)}` : null;
+  const [qrSvg, qrPng] = publicUrl
+    ? await Promise.all([
+        QRCode.toString(publicUrl, { type: "svg", margin: 1, color: { dark: "#101828", light: "#ffffff" } }),
+        QRCode.toDataURL(publicUrl, { width: 1024, margin: 2 }),
+      ])
+    : [null, null];
+  const latestAnnonce = contents.find((c) => c.kind === "annonce")?.content ?? null;
+
   const specs: [string, string][] = [
     ["Type", kindLabel(p.kind)],
     ["Prix de vente", formatEuros(p.price)],
@@ -80,7 +93,17 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
       <PropertyHeader p={p} />
       <div className="mx-auto grid max-w-7xl items-start gap-6 px-5 py-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <PhotoManager propertyId={p.id} photos={await listPropertyPhotos(p.id)} />
+          <PhotoManager propertyId={p.id} photos={photos} />
+
+          <PublicationCard
+            propertyId={p.id}
+            published={p.published}
+            publicUrl={publicUrl}
+            qrSvg={qrSvg}
+            qrPng={qrPng}
+            publicDescription={p.publicDescription}
+            latestAnnonce={latestAnnonce}
+          />
 
           <Card>
             <CardHeader title="Caractéristiques" />
@@ -95,7 +118,7 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
           </Card>
 
           <Card>
-            <CardHeader title="Description" />
+            <CardHeader title="Notes de l'agent" description="Internes : jamais affichées sur la page publique" />
             {p.description ? (
               <p className="p-5 text-[15px] leading-relaxed whitespace-pre-line text-body">{p.description}</p>
             ) : (
@@ -121,7 +144,7 @@ async function PropertyDetails({ params }: { params: PageProps<"/app/biens/[id]"
           </Card>
 
           <Card>
-            <CardHeader title="Prochaines visites" />
+            <CardHeader title="Prochaines visites" action={<Link href={`/app/visites/nouvelle?bien=${p.id}`} className="text-[13px] font-semibold text-brand-700">Planifier</Link>} />
             <UpcomingVisits visits={await listUpcomingVisits({ propertyId: p.id })} showProperty={false} />
           </Card>
         </div>

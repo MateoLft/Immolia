@@ -27,6 +27,13 @@ export async function proxy(request: NextRequest) {
   const isLoggedIn = Boolean(data?.claims);
   const { pathname } = request.nextUrl;
 
+  if (!isLoggedIn && pathname === "/nouveau-mot-de-passe") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/mot-de-passe-oublie";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   if (!isLoggedIn && pathname.startsWith("/app")) {
     const url = request.nextUrl.clone();
     url.pathname = "/connexion";
@@ -45,5 +52,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/connexion", "/inscription"],
+  matcher: ["/app/:path*", "/connexion", "/inscription", "/nouveau-mot-de-passe"],
 };

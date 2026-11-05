@@ -16,7 +16,7 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Liste des modules centralisée (`src/lib/modules.ts`) | ✅ |
 | Base de données Supabase (agences, utilisateurs, biens, visites, acquéreurs) | ✅ |
 | Comptes : inscription, connexion, déconnexion (Supabase Auth) | ✅ |
-| Mot de passe oublié | ⬜ |
+| Mot de passe oublié | ✅ |
 | Brancher le tableau de bord et les biens sur la base (fin des données d'exemple) | ✅ |
 | Mise en ligne sur Vercel (immolia.vercel.app) | ✅ |
 | Abonnements Stripe (essai 14 jours, mensuel / annuel, portail client) | ⬜ |
@@ -34,13 +34,16 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Modifier / archiver un bien | ✅ (archiver = statut « Archivé ») | |
 | Photos des biens (stockage Supabase privé, compression, photo principale) | ✅ | |
 | Ajouter un bien (formulaire) | ✅ | 🎨 étape 2 |
-| Page publique du bien + QR code | ⬜ | |
+| Page publique du bien + QR code + demande de visite | ✅ | |
 | Studio IA : annonce portails, annonce courte, posts Instagram / Facebook | ✅ | 🎨 |
 | Studio IA : analyse des photos (ambiance, style, état) | ✅ | |
 | Studio IA : plaquette PDF | ⬜ | |
 | Studio IA : quota 15 biens / mois pour l'offre Essentiel | ⬜ (avec Stripe) | |
-| Visites : agenda, réservation en ligne, rappels SMS | ⬜ | |
-| Bon de visite signé électroniquement | ⬜ | |
+| Visites : agenda, demandes en ligne, comptes rendus | ✅ | |
+| Visites : rappels SMS / email automatiques | ⬜ | |
+| Visites : créneaux réservables directement par l'acquéreur | ⬜ | |
+| Bon de visite : suivi « signé » | ✅ | |
+| Bon de visite signé électroniquement (document + signature) | ⬜ | |
 | Paramètres : profil, marque, abonnement, factures | ⬜ | |
 
 ## Étape 3 — Offre « Pro »

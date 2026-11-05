@@ -24,6 +24,9 @@ const base = {
   annualCharges: null,
   createdAt: "2026-10-20T09:00:00Z",
   coverUrl: null,
+  published: false,
+  publicSlug: null,
+  publicDescription: null,
 };
 
 export const DEMO_PROPERTIES: Property[] = [

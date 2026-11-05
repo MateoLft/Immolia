@@ -20,7 +20,7 @@ export type AppModule = {
 
 export const MODULES: AppModule[] = [
   { slug: "biens", name: "Biens", description: "Fiches complètes, photos, documents et historique de chaque bien.", plan: "essentiel", status: "en-cours", section: "pilotage" },
-  { slug: "visites", name: "Visites", description: "Agenda, réservation en ligne, rappels SMS et bons de visite signés.", plan: "essentiel", status: "prevu", section: "pilotage" },
+  { slug: "visites", name: "Visites", description: "Agenda, réservation en ligne, rappels SMS et bons de visite signés.", plan: "essentiel", status: "en-cours", section: "pilotage" },
   { slug: "acquereurs", name: "Acquéreurs", description: "Fiches acquéreurs, score de qualification et assistant IA 24h/24.", plan: "pro", status: "prevu", section: "pilotage" },
   { slug: "vendeurs", name: "Vendeurs", description: "Suivi des vendeurs et rapport hebdomadaire automatique.", plan: "pro", status: "prevu", section: "pilotage" },
   { slug: "mandats", name: "Mandats", description: "Registre des mandats, alertes d'échéance et détection d'opportunités.", plan: "agence", status: "prevu", section: "pilotage" },

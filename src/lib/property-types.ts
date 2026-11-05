@@ -61,6 +61,10 @@ export type Property = {
   createdAt: string;
   /** URL temporaire de la photo principale, si le bien en a une. */
   coverUrl: string | null;
+  published: boolean;
+  publicSlug: string | null;
+  /** Texte affiché sur la page publique (distinct des notes internes). */
+  publicDescription: string | null;
 };
 
 export type PropertyPhoto = {
@@ -76,8 +80,38 @@ export type Visit = {
   propertyId: string;
   propertyTitle: string;
   buyerName: string | null;
+  buyerPhone?: string | null;
+  buyerEmail?: string | null;
   voucherSigned: boolean;
+  feedback?: string | null;
 };
+
+export type VisitRequest = {
+  id: string;
+  createdAt: string;
+  propertyId: string;
+  propertyTitle: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  message: string | null;
+  availability: string | null;
+  status: "nouvelle" | "planifiee" | "archivee";
+};
+
+export type Buyer = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  score: "prioritaire" | "qualifie" | "a-qualifier";
+};
+
+export const FINANCING_OPTIONS = [
+  { value: "pret-accorde", label: "Prêt accordé / achat comptant", score: "prioritaire" },
+  { value: "accord-principe", label: "Accord de principe de la banque", score: "qualifie" },
+  { value: "non-etudie", label: "Financement non étudié", score: "a-qualifier" },
+] as const;
 
 export type Account = {
   fullName: string;

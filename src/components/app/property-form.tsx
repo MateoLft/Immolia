@@ -152,7 +152,7 @@ export function PropertyForm({ property }: { property?: Property }) {
         <Field label="Charges annuelles (€)" name="charges" error={e.charges}>
           <Input name="charges" defaultValue={v.charges} error={e.charges} inputMode="numeric" />
         </Field>
-        <Field label="Description" name="description" className="sm:col-span-2 lg:col-span-4" hint="Vos notes (atouts, rénovations, environnement…) : le Studio IA s'en sert pour rédiger l'annonce">
+        <Field label="Notes de l'agent (internes)" name="description" className="sm:col-span-2 lg:col-span-4" hint="Atouts, rénovations, environnement… Jamais affichées publiquement : le Studio IA s'en sert pour rédiger l'annonce">
           <textarea id="description" name="description" rows={5} defaultValue={v.description} className={clsx(inputClasses, "h-auto py-3 leading-relaxed")} />
         </Field>
       </Section>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { signIn, signUp, type AuthState } from "@/app/(auth)/actions";
+import { requestPasswordReset, signIn, signUp, updatePassword, type AuthState } from "@/app/(auth)/actions";
 import { Field } from "./auth-card";
 
 function Feedback({ state }: { state: AuthState }) {
@@ -41,11 +41,39 @@ export function SignInForm({ next }: { next?: string }) {
       <input type="hidden" name="suite" value={next ?? "/app"} />
       <Field label="Email" name="email" type="email" autoComplete="email" />
       <Field label="Mot de passe" name="password" type="password" autoComplete="current-password" />
+      <Link href="/mot-de-passe-oublie" className="-mt-2 self-end text-sm font-semibold text-brand-700">Mot de passe oublié ?</Link>
       <Feedback state={state} />
       <button type="submit" disabled={pending} className={submitClasses}>
         {pending ? "Connexion…" : "Se connecter"}
       </button>
       <Link href="/app" className="text-center text-sm font-semibold text-brand-700">Accéder à la démo</Link>
+    </form>
+  );
+}
+
+export function ForgotPasswordForm() {
+  const [state, action, pending] = useActionState(requestPasswordReset, {});
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <Field label="Email" name="email" type="email" autoComplete="email" />
+      <Feedback state={state} />
+      <button type="submit" disabled={pending} className={submitClasses}>
+        {pending ? "Envoi…" : "Recevoir le lien"}
+      </button>
+    </form>
+  );
+}
+
+export function NewPasswordForm() {
+  const [state, action, pending] = useActionState(updatePassword, {});
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <Field label="Nouveau mot de passe (8 caractères minimum)" name="password" type="password" autoComplete="new-password" />
+      <Field label="Confirmer le mot de passe" name="confirm" type="password" autoComplete="new-password" />
+      <Feedback state={state} />
+      <button type="submit" disabled={pending} className={submitClasses}>
+        {pending ? "Enregistrement…" : "Enregistrer le mot de passe"}
+      </button>
     </form>
   );
 }

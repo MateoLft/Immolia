@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import clsx from "clsx";
-import { Check, Copy, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Check, Copy, Globe, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { generateContent } from "@/app/app/studio/actions";
+import { savePublicDescription } from "@/app/app/biens/publication-actions";
 import { CONTENT_KINDS, TONES, type ContentKind, type GeneratedContent, type Tone } from "@/lib/studio";
 
 const dateFr = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
@@ -30,6 +31,7 @@ export function StudioWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [publishedText, setPublishedText] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function show(item: GeneratedContent | null) {
@@ -59,6 +61,18 @@ export function StudioWorkspace({
       if (res.photosRequested > 0 && res.usedPhotos === 0) notices.push("Les photos n'ont pas pu être analysées : le texte a été rédigé à partir de la fiche seule.");
       if (!res.saved) notices.push("Contenu généré, mais non enregistré dans l'historique.");
       if (notices.length > 0) setNotice(notices.join(" "));
+    });
+  }
+
+  function applyToPublicPage() {
+    setError(null);
+    startTransition(async () => {
+      const res = await savePublicDescription(propertyId, text);
+      if (!res.ok) setError(res.error);
+      else {
+        setPublishedText(true);
+        setTimeout(() => setPublishedText(false), 3000);
+      }
     });
   }
 
@@ -165,7 +179,13 @@ export function StudioWorkspace({
             {current && <p className="mt-0.5 text-[13px] text-muted">Version du {dateFr.format(new Date(current.createdAt))} · ton {TONES.find((t) => t.value === current.tone)?.label.toLowerCase()}</p>}
           </div>
           {current && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {kind === "annonce" && (
+                <button type="button" onClick={applyToPublicPage} disabled={pending} className="flex h-9 items-center gap-2 rounded-lg border border-line-strong px-3 text-sm font-semibold text-body shadow-xs hover:bg-canvas disabled:opacity-60">
+                  {publishedText ? <Check aria-hidden className="size-4 text-success-700" /> : <Globe aria-hidden className="size-4" />}
+                  {publishedText ? "Texte enregistré" : "Utiliser sur la page publique"}
+                </button>
+              )}
               <button type="button" onClick={copy} className="flex h-9 items-center gap-2 rounded-lg border border-line-strong px-3 text-sm font-semibold text-body shadow-xs hover:bg-canvas">
                 {copied ? <Check aria-hidden className="size-4 text-success-700" /> : <Copy aria-hidden className="size-4" />}
                 {copied ? "Copié" : "Copier"}

@@ -11,8 +11,10 @@ import {
   type Account,
   type DashboardStats,
   type Property,
+  type Buyer,
   type PropertyPhoto,
   type Visit,
+  type VisitRequest,
 } from "./property-types";
 
 /**
@@ -84,6 +86,9 @@ type PropertyRow = {
   mandate_end: string | null;
   views_count: number;
   created_at: string;
+  published: boolean;
+  public_slug: string | null;
+  public_description: string | null;
   visits?: { count: number }[];
   property_photos?: { storage_path: string; position: number }[];
 };
@@ -144,6 +149,9 @@ function toProperty(r: PropertyRow, coverUrl: string | null = null): Property {
     visitsCount: r.visits?.[0]?.count ?? 0,
     createdAt: r.created_at,
     coverUrl,
+    published: r.published ?? false,
+    publicSlug: r.public_slug ?? null,
+    publicDescription: r.public_description ?? null,
   };
 }
 
@@ -201,26 +209,107 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
+type BuyerJoin = { full_name: string; phone?: string | null; email?: string | null };
 type VisitRow = {
   id: string;
   starts_at: string;
   status: Visit["status"];
   property_id: string;
   voucher_signed_at: string | null;
+  feedback?: string | null;
   properties: { title: string } | { title: string }[] | null;
-  buyers: { full_name: string } | { full_name: string }[] | null;
+  buyers: BuyerJoin | BuyerJoin[] | null;
 };
 
 function toVisit(r: VisitRow): Visit {
+  const buyer = one(r.buyers);
   return {
     id: r.id,
     startsAt: r.starts_at,
     status: r.status,
     propertyId: r.property_id,
     propertyTitle: one(r.properties)?.title ?? "Bien",
-    buyerName: one(r.buyers)?.full_name ?? null,
+    buyerName: buyer?.full_name ?? null,
+    buyerPhone: buyer?.phone ?? null,
+    buyerEmail: buyer?.email ?? null,
     voucherSigned: Boolean(r.voucher_signed_at),
+    feedback: r.feedback ?? null,
   };
+}
+
+const VISIT_SELECT = "id, starts_at, status, property_id, voucher_signed_at, feedback, properties(title), buyers(full_name, phone, email)";
+
+/** Visites du module Visites : à venir, passées à compléter, réalisées récemment. */
+export async function listVisitsOverview(): Promise<{ upcoming: Visit[]; toComplete: Visit[]; done: Visit[] }> {
+  if (!isSupabaseConfigured) return { upcoming: DEMO_VISITS, toComplete: [], done: [] };
+  const { supabase } = await getSession();
+  const now = new Date().toISOString();
+  const [upcoming, toComplete, done] = await Promise.all([
+    supabase.from("visits").select(VISIT_SELECT).eq("status", "prevue").gte("starts_at", now).order("starts_at").limit(100),
+    supabase.from("visits").select(VISIT_SELECT).eq("status", "prevue").lt("starts_at", now).order("starts_at", { ascending: false }).limit(50),
+    supabase.from("visits").select(VISIT_SELECT).eq("status", "realisee").order("starts_at", { ascending: false }).limit(15),
+  ]);
+  const map = (r: { data: unknown }) => ((r.data ?? []) as VisitRow[]).map(toVisit);
+  return { upcoming: map(upcoming), toComplete: map(toComplete), done: map(done) };
+}
+
+type RequestRow = {
+  id: string;
+  created_at: string;
+  property_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  message: string | null;
+  availability: string | null;
+  status: VisitRequest["status"];
+  properties: { title: string } | { title: string }[] | null;
+};
+
+function toRequest(r: RequestRow): VisitRequest {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    propertyId: r.property_id,
+    propertyTitle: one(r.properties)?.title ?? "Bien",
+    fullName: r.full_name,
+    email: r.email,
+    phone: r.phone,
+    message: r.message,
+    availability: r.availability,
+    status: r.status,
+  };
+}
+
+/** Demandes de visite reçues depuis les pages publiques, non encore traitées. */
+export async function listNewVisitRequests(): Promise<VisitRequest[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("visit_requests")
+    .select("id, created_at, property_id, full_name, email, phone, message, availability, status, properties(title)")
+    .eq("status", "nouvelle")
+    .order("created_at", { ascending: false })
+    .limit(100);
+  return ((data ?? []) as RequestRow[]).map(toRequest);
+}
+
+export async function getVisitRequest(id: string): Promise<VisitRequest | null> {
+  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("visit_requests")
+    .select("id, created_at, property_id, full_name, email, phone, message, availability, status, properties(title)")
+    .eq("id", id)
+    .maybeSingle();
+  return data ? toRequest(data as RequestRow) : null;
+}
+
+export async function listBuyers(): Promise<Buyer[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("buyers").select("id, full_name, email, phone, score").order("full_name").limit(500);
+  return (data ?? []).map((b) => ({ id: b.id, fullName: b.full_name, email: b.email, phone: b.phone, score: b.score }));
 }
 
 /** Prochaines visites prévues (toutes, ou pour un bien donné). */
