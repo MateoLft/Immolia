@@ -2,12 +2,13 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { PropertyForm } from "@/components/app/property-form";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listSellers } from "@/lib/data";
+import { listMembers, listSellers } from "@/lib/data";
 
 export const metadata = { title: "Nouveau bien" };
 
 async function Form() {
-  return <PropertyForm sellers={await listSellers()} />;
+  const [sellers, members] = await Promise.all([listSellers(), listMembers()]);
+  return <PropertyForm sellers={sellers} members={members} />;
 }
 
 export default function NewPropertyPage() {

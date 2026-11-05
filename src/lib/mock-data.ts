@@ -29,6 +29,7 @@ const base = {
   publicSlug: null,
   publicDescription: null,
   sellerId: null,
+  agentId: null,
 };
 
 export const DEMO_PROPERTIES: Property[] = [

@@ -12,6 +12,9 @@ export function Pricing() {
 
   return (
     <div className="flex flex-col items-center gap-10">
+      <p className="rounded-full bg-warning-50 px-4 py-1.5 text-sm font-semibold text-warning-700">
+        Prix de lancement : garantis à vie pour les premiers clients
+      </p>
       <div role="group" aria-label="Période de facturation" className="flex gap-1 rounded-[10px] border border-line bg-hover p-1">
         {[
           { value: false, label: "Mensuel" },

@@ -4,7 +4,7 @@ import { MODULES, getModule } from "@/lib/modules";
 
 export function generateStaticParams() {
   // Ces modules ont leurs propres pages.
-  return MODULES.filter((m) => !["biens", "studio", "visites", "parametres", "acquereurs", "vendeurs", "mandats", "estimations", "dossiers"].includes(m.slug)).map((m) => ({ module: m.slug }));
+  return MODULES.filter((m) => !["biens", "studio", "visites", "parametres", "acquereurs", "vendeurs", "mandats", "estimations", "dossiers", "equipe"].includes(m.slug)).map((m) => ({ module: m.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/app/[module]">) {

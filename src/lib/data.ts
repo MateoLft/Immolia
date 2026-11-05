@@ -18,7 +18,10 @@ import {
   type Buyer,
   type EstimationRequest,
   type Listing,
+  type Invitation,
   type Mandate,
+  type Member,
+  type MemberStats,
   type PropertyPhoto,
   type Visit,
   type VisitRequest,
@@ -140,6 +143,7 @@ type PropertyRow = {
   public_slug: string | null;
   public_description: string | null;
   seller_id?: string | null;
+  agent_id?: string | null;
   visits?: { count: number }[];
   property_photos?: { storage_path: string; position: number }[];
 };
@@ -204,6 +208,7 @@ function toProperty(r: PropertyRow, coverUrl: string | null = null): Property {
     publicSlug: r.public_slug ?? null,
     publicDescription: r.public_description ?? null,
     sellerId: r.seller_id ?? null,
+    agentId: r.agent_id ?? null,
   };
 }
 
@@ -691,6 +696,69 @@ export async function getVisit(id: string): Promise<VisitDetail | null> {
     signerName: (data as { voucher_signer_name?: string | null }).voucher_signer_name ?? null,
     signaturePath: (data as { voucher_signature_path?: string | null }).voucher_signature_path ?? null,
   };
+}
+
+export async function getCurrentUserId(): Promise<string> {
+  if (!isSupabaseConfigured) return "demo";
+  return (await getSession()).userId;
+}
+
+/** Membres de l'agence (module Équipe). */
+export async function listMembers(): Promise<Member[]> {
+  if (!isSupabaseConfigured) return [{ id: "demo", fullName: DEMO_ACCOUNT.fullName, email: null, phone: null, role: "owner", active: true, createdAt: new Date(0).toISOString() }];
+  const { supabase } = await getSession();
+  const { data } = await supabase.from("profiles").select("*").order("created_at");
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    fullName: m.full_name || "Sans nom",
+    email: m.email ?? null,
+    phone: m.phone ?? null,
+    role: m.role,
+    active: m.active ?? true,
+    createdAt: m.created_at,
+  }));
+}
+
+export async function listInvitations(): Promise<Invitation[]> {
+  if (!isSupabaseConfigured) return [];
+  const { supabase } = await getSession();
+  const { data } = await supabase
+    .from("agency_invitations")
+    .select("id, email, role, token, created_at, expires_at")
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((i) => ({ id: i.id, email: i.email, role: i.role, token: i.token, createdAt: i.created_at, expiresAt: i.expires_at }));
+}
+
+/** Activité de chaque membre (tableau de bord manager). */
+export async function getMemberStats(): Promise<Map<string, MemberStats>> {
+  const stats = new Map<string, MemberStats>();
+  if (!isSupabaseConfigured) return stats;
+  const { supabase } = await getSession();
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const [props, visits, mandates, ai] = await Promise.all([
+    supabase.from("properties").select("agent_id").in("status", ACTIVE_STATUSES).limit(10000),
+    supabase.from("visits").select("agent_id, starts_at, status").gte("starts_at", monthStart).limit(10000),
+    supabase.from("mandates").select("created_by").gte("created_at", monthStart).limit(10000),
+    supabase.from("generated_contents").select("created_by").gte("created_at", monthStart).limit(10000),
+  ]);
+  const get = (id: string | null) => {
+    const key = id ?? "";
+    if (!stats.has(key)) stats.set(key, { properties: 0, upcomingVisits: 0, visitsThisMonth: 0, mandatesThisMonth: 0, aiThisMonth: 0 });
+    return stats.get(key)!;
+  };
+  for (const r of props.data ?? []) get(r.agent_id).properties++;
+  for (const r of visits.data ?? []) {
+    const s = get(r.agent_id);
+    if (r.status === "prevue" && new Date(r.starts_at) > now) s.upcomingVisits++;
+    if (r.status === "realisee") s.visitsThisMonth++;
+  }
+  for (const r of mandates.data ?? []) get(r.created_by).mandatesThisMonth++;
+  for (const r of ai.data ?? []) get(r.created_by).aiThisMonth++;
+  return stats;
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {

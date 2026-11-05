@@ -74,7 +74,7 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 | Registre des mandats numéroté (non supprimable), alertes d'échéance, export CSV, impression | ✅ |
 | Dossier de vente : pièces, relance du vendeur, synthèse des PV d'AG et diagnostics par l'IA | ✅ |
 | Conformité anti-blanchiment (LCB-FT) | ⬜ |
-| Équipe, rôles et tableau de bord manager | ⬜ |
+| Équipe : invitations par lien, rôles (responsable, manager, agent), désactivation, tableau de bord manager, agent responsable d'un bien | ✅ |
 
 ## Avant le lancement commercial
 
@@ -83,3 +83,8 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 - Liste des portails de diffusion (FAQ marquée [À DÉFINIR])
 - Hébergement de production : l'offre gratuite de Vercel (Hobby) est réservée à un usage non commercial,
   prévoir l'offre payante ou un autre hébergeur au lancement
+
+## Tarifs (prix de lancement)
+
+Essentiel 39 € · Pro 69 € (dossiers de vente, registre des mandats, prospects inclus) · Agence 139 € pour 5 agents, puis 29 € par agent.
+Quotas annoncés (15 biens / mois en Essentiel, analyses de documents 30 / 100 par mois) : à appliquer avec Stripe.

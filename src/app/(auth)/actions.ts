@@ -109,6 +109,27 @@ export async function updatePassword(_prev: AuthState, form: FormData): Promise<
   redirect("/app");
 }
 
+/** Inscription d'un membre invité : il rejoint l'agence qui l'a invité. */
+export async function signUpWithInvitation(token: string, email: string, _prev: AuthState, form: FormData): Promise<AuthState> {
+  if (!isSupabaseConfigured) return NOT_CONFIGURED;
+  const fullName = text(form, "name");
+  const password = String(form.get("password") ?? "");
+  if (!fullName) return { error: "Indiquez votre nom." };
+  if (password.length < 8) return { error: "Le mot de passe doit contenir au moins 8 caractères." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName, invitation_token: token }, emailRedirectTo: `${await siteOrigin()}/auth/callback` },
+  });
+  if (error) {
+    return { error: error.code === "user_already_exists" ? "Un compte existe déjà avec cet email. Contactez le responsable de l'agence." : "L'inscription a échoué, merci de réessayer." };
+  }
+  if (!data.session) return { message: "Compte créé ! Confirmez votre adresse en cliquant sur le lien reçu par email, puis connectez-vous." };
+  redirect("/app");
+}
+
 export async function signOut() {
   if (isSupabaseConfigured) {
     const supabase = await createClient();

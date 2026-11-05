@@ -75,6 +75,9 @@ function parsePropertyForm(form: FormData): ParsedForm {
   const sellerId = str(form, "seller_id");
   if (sellerId && /^[0-9a-f-]{36}$/i.test(sellerId)) Object.assign(row, { seller_id: sellerId });
   else if (form.get("seller_id") === "none") Object.assign(row, { seller_id: null });
+  // Agent responsable (choisi par un responsable ou un manager).
+  const agentId = str(form, "agent_id");
+  if (agentId && /^[0-9a-f-]{36}$/i.test(agentId)) Object.assign(row, { agent_id: agentId });
 
   if (Object.keys(errors).length > 0) {
     return { ok: false, state: { error: "Merci de corriger les champs indiqués.", fieldErrors: errors, values } };
@@ -100,7 +103,7 @@ export async function createProperty(_prev: PropertyFormState, form: FormData): 
   const { supabase, userId } = await requireUser();
   const { data, error } = await supabase
     .from("properties")
-    .insert({ ...parsed.row, agent_id: userId })
+    .insert({ agent_id: userId, ...parsed.row })
     .select("id")
     .single();
 

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PropertyForm } from "@/components/app/property-form";
-import { getProperty, listSellers } from "@/lib/data";
+import { getProperty, listMembers, listSellers } from "@/lib/data";
 
 export const metadata = { title: "Modifier le bien" };
 
@@ -21,7 +21,7 @@ async function EditForm({ params }: { params: PageProps<"/app/biens/[id]/modifie
         <span className="font-medium text-ink">Modifier</span>
       </nav>
       <h1 className="text-[26px] font-bold tracking-tight">Modifier le bien</h1>
-      <PropertyForm property={property} sellers={await listSellers()} />
+      <PropertyForm property={property} sellers={await listSellers()} members={await listMembers()} />
     </>
   );
 }

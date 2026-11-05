@@ -66,6 +66,7 @@ export type Property = {
   /** Texte affiché sur la page publique (distinct des notes internes). */
   publicDescription: string | null;
   sellerId: string | null;
+  agentId: string | null;
 };
 
 export type Seller = {
@@ -254,4 +255,39 @@ export const ESTIMATION_STATUS_LABEL: Record<EstimationRequest["status"], { labe
   "en-cours": { label: "En cours", tone: "brand" },
   envoyee: { label: "Avis envoyé", tone: "success" },
   archivee: { label: "Archivée", tone: "neutral" },
+};
+
+export type MemberRole = "owner" | "manager" | "agent";
+
+export const ROLE_LABEL: Record<MemberRole, string> = {
+  owner: "Responsable",
+  manager: "Manager",
+  agent: "Agent",
+};
+
+export type Member = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  role: MemberRole;
+  active: boolean;
+  createdAt: string;
+};
+
+export type Invitation = {
+  id: string;
+  email: string;
+  role: MemberRole;
+  token: string;
+  createdAt: string;
+  expiresAt: string;
+};
+
+export type MemberStats = {
+  properties: number;
+  upcomingVisits: number;
+  visitsThisMonth: number;
+  mandatesThisMonth: number;
+  aiThisMonth: number;
 };

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { requestPasswordReset, signIn, signUp, updatePassword, type AuthState } from "@/app/(auth)/actions";
+import { requestPasswordReset, signIn, signUp, signUpWithInvitation, updatePassword, type AuthState } from "@/app/(auth)/actions";
 import { Field } from "./auth-card";
 
 function Feedback({ state }: { state: AuthState }) {
@@ -73,6 +73,24 @@ export function NewPasswordForm() {
       <Feedback state={state} />
       <button type="submit" disabled={pending} className={submitClasses}>
         {pending ? "Enregistrement…" : "Enregistrer le mot de passe"}
+      </button>
+    </form>
+  );
+}
+
+export function InvitationForm({ token, email }: { token: string; email: string }) {
+  const [state, action, pending] = useActionState(signUpWithInvitation.bind(null, token, email), {});
+  return (
+    <form action={action} className="flex flex-col gap-4">
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-body">
+        Email
+        <input value={email} disabled className="h-11 rounded-lg border border-line-strong bg-canvas px-3.5 text-[15px] text-muted" />
+      </label>
+      <Field label="Prénom et nom" name="name" autoComplete="name" />
+      <Field label="Mot de passe (8 caractères minimum)" name="password" type="password" autoComplete="new-password" />
+      <Feedback state={state} />
+      <button type="submit" disabled={pending} className={submitClasses}>
+        {pending ? "Création en cours…" : "Rejoindre l'agence"}
       </button>
     </form>
   );

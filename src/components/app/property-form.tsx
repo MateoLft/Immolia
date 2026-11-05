@@ -3,7 +3,7 @@
 import { useActionState, type ReactNode } from "react";
 import clsx from "clsx";
 import { createProperty, updateProperty, type PropertyFormState } from "@/app/app/biens/actions";
-import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES, type Property, type Seller } from "@/lib/property-types";
+import { ENERGY_CLASSES, MANDATE_TYPES, PROPERTY_KINDS, STATUS_LABEL, PROPERTY_STATUSES, type Member, type Property, type Seller } from "@/lib/property-types";
 import { ButtonLink } from "@/components/ui/button";
 
 const inputClasses =
@@ -91,10 +91,11 @@ function toValues(p: Property): Record<string, string> {
     reference: s(p.reference),
     status: p.status,
     seller_id: p.sellerId ?? "",
+    agent_id: p.agentId ?? "",
   };
 }
 
-export function PropertyForm({ property, sellers = [] }: { property?: Property; sellers?: Seller[] }) {
+export function PropertyForm({ property, sellers = [], members = [] }: { property?: Property; sellers?: Seller[]; members?: Member[] }) {
   const formAction = property ? updateProperty.bind(null, property.id) : createProperty;
   const [state, action, pending] = useActionState<PropertyFormState, FormData>(formAction, {});
   const e = state.fieldErrors ?? {};
@@ -177,6 +178,14 @@ export function PropertyForm({ property, sellers = [] }: { property?: Property; 
             {sellers.map((s) => <option key={s.id} value={s.id}>{s.fullName}</option>)}
           </Select>
         </Field>
+        {members.filter((m) => m.active).length > 1 && (
+          <Field label="Agent responsable" name="agent_id" className="sm:col-span-2">
+            <Select name="agent_id" defaultValue={v.agent_id ?? ""}>
+              <option value="">{property ? "Inchangé" : "Moi"}</option>
+              {members.filter((m) => m.active).map((m) => <option key={m.id} value={m.id}>{m.fullName}</option>)}
+            </Select>
+          </Field>
+        )}
         <Field label="Statut" name="status">
           <Select name="status" defaultValue={v.status ?? "brouillon"}>
             {PROPERTY_STATUSES.filter((s) => s !== "archive" || property).map((s) => <option key={s} value={s}>{STATUS_LABEL[s].label}</option>)}
