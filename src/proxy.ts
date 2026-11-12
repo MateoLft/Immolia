@@ -4,10 +4,17 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "@/lib/sup
 
 /**
  * Rafraîchit la session Supabase et protège l'espace agent (/app).
- * Sans clés Supabase (mode démo), laisse tout passer.
+ * Sans clés Supabase (mode démo local), laisse tout passer ; en production, refuse l'accès à /app.
  */
 export async function proxy(request: NextRequest) {
-  if (!isSupabaseConfigured) return NextResponse.next();
+  if (!isSupabaseConfigured) {
+    // En production, ne jamais basculer silencieusement sur les données d'exemple :
+    // une variable d'environnement perdue doit se voir, pas ressembler à une perte de données.
+    if (process.env.VERCEL_ENV === "production" && request.nextUrl.pathname.startsWith("/app")) {
+      return new NextResponse("Service momentanément indisponible : configuration manquante.", { status: 503, headers: { "Retry-After": "300" } });
+    }
+    return NextResponse.next();
+  }
 
   let response = NextResponse.next({ request });
 

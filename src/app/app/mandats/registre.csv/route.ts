@@ -13,9 +13,16 @@ export async function GET() {
   const { data: claims } = await supabase.auth.getClaims();
   if (!claims?.claims?.sub) return new Response("Non connecté", { status: 401 });
 
-  const { data } = await supabase.from("mandates").select("*").order("number");
+  // Lecture par blocs de 1 000 : le registre doit être exporté en entier, sans troncature.
+  const data: Record<string, unknown>[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await supabase.from("mandates").select("*").order("number").range(from, from + 999);
+    if (error) return new Response("Export impossible", { status: 500 });
+    data.push(...(page ?? []));
+    if ((page?.length ?? 0) < 1000) break;
+  }
   const header = ["N°", "Date de signature", "Mandant", "Bien", "Type", "Date de fin", "Prix (€)", "Honoraires", "Statut", "Notes"];
-  const rows = (data ?? []).map((m) =>
+  const rows = data.map((m) =>
     [m.number, m.signed_on, m.seller_name, m.property_label, m.type, m.ends_on, m.price_eur, m.fee_text, m.status, m.notes].map(esc).join(";"),
   );
   const csv = "﻿" + [header.join(";"), ...rows].join("\r\n");

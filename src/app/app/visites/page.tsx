@@ -35,6 +35,7 @@ function VisitLine({ v, children }: { v: Visit; children?: React.ReactNode }) {
           <Link href={`/app/biens/${v.propertyId}`} className="block font-semibold hover:text-brand-700">{v.propertyTitle}</Link>
           <span className="block text-sm text-muted">{v.buyerName ?? "Acquéreur à renseigner"}</span>
           <Contact phone={v.buyerPhone} email={v.buyerEmail} />
+          {v.notes && <span className="mt-1 block text-[13px] whitespace-pre-line text-subtle">{v.notes}</span>}
         </span>
       </div>
       {children}
@@ -91,6 +92,7 @@ async function Overview() {
                 <div className="min-w-0">
                   <p className="font-semibold">{v.propertyTitle}</p>
                   <p className="text-sm text-muted first-letter:uppercase">{shortFmt.format(new Date(v.startsAt))} · {v.buyerName ?? "Acquéreur à renseigner"}</p>
+                  {v.notes && <p className="mt-1 text-[13px] whitespace-pre-line text-subtle">{v.notes}</p>}
                 </div>
                 <div className="w-full lg:max-w-md"><CompleteVisitForm id={v.id} /></div>
               </li>
@@ -137,6 +139,7 @@ async function Overview() {
               <li key={v.id} className="border-b border-hover px-5 py-4 last:border-0">
                 <p className="font-semibold">{v.propertyTitle} <span className="font-normal text-muted">· {v.buyerName ?? "Acquéreur"}</span></p>
                 <p className="text-[13px] text-subtle first-letter:uppercase">{shortFmt.format(new Date(v.startsAt))}{v.voucherSigned ? " · bon de visite signé" : ""}</p>
+                {v.notes && <p className="mt-1.5 text-[13px] whitespace-pre-line text-muted">Préparation : {v.notes}</p>}
                 {v.feedback && <p className="mt-1.5 text-sm whitespace-pre-line text-body">{v.feedback}</p>}
               </li>
             ))}

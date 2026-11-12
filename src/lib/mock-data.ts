@@ -15,6 +15,7 @@ export const DEMO_ACCOUNT: Account = {
   trialDaysLeft: 9,
   trialDays: 14,
   demo: true,
+  inactive: false,
   feeText: null,
 };
 

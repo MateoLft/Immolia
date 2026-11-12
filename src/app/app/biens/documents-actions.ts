@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { analyzeDocument } from "@/lib/ai";
+import { consumeAiQuota } from "@/lib/quota";
 import { kindOf } from "@/lib/documents";
 
 type Result = { ok: true } | { ok: false; error: string };
@@ -69,6 +70,8 @@ export async function runDocumentAnalysis(id: string): Promise<Result> {
   const mediaType = head[0] === 0x25 && head[1] === 0x50 ? "application/pdf" : head[0] === 0x89 ? "image/png" : head[0] === 0xff ? "image/jpeg" : null;
   if (!mediaType) return { ok: false, error: "Format non pris en charge (PDF, JPEG ou PNG)." };
 
+  const quota = await consumeAiQuota("document");
+  if (!quota.ok) return quota;
   const result = await analyzeDocument(bytes.toString("base64"), doc.kind, mediaType);
   if (!result.ok) return result;
   const { error } = await s.supabase.from("property_documents").update({ analysis: result.text }).eq("id", id);

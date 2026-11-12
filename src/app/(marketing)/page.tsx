@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, FileCheck2, MessageSquare, Server, ShieldCheck } from "lucide-react";
+import { Check, FileCheck2, MessageSquare, ShieldCheck, Sparkles } from "lucide-react";
 import { Logo, LogoMark } from "@/components/logo";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,21 +8,21 @@ import { MODULES } from "@/lib/modules";
 import { PLANS } from "@/lib/plans";
 
 const TRUST = [
-  { icon: ShieldCheck, label: "Conforme RGPD" },
-  { icon: Server, label: "Données hébergées en France" },
-  { icon: FileCheck2, label: "Bons de visite conformes loi Hoguet" },
+  { icon: ShieldCheck, label: "Données cloisonnées par agence" },
+  { icon: FileCheck2, label: "Registre des mandats inaltérable" },
+  { icon: Sparkles, label: "Une IA qui n'invente aucune information" },
   { icon: MessageSquare, label: "Support en français" },
 ];
 
 const FAQ = [
   {
     q: "Puis-je importer mes biens depuis mon logiciel actuel ?",
-    a: "Oui. L'import se fait à partir d'un fichier ou des flux de diffusion, et notre équipe vous accompagne gratuitement.",
+    a: "L'import automatique est en préparation. En attendant, créer un bien prend quelques minutes, et l'IA rédige l'annonce à partir de ses caractéristiques et de ses photos.",
   },
-  { q: "Les annonces sont-elles diffusées sur les portails ?", a: "[À DÉFINIR : liste des portails connectés au lancement.]" },
+  { q: "Les annonces sont-elles diffusées sur les portails ?", a: "Pas de diffusion automatique pour l'instant : Immolia prépare l'annonce aux limites de chaque portail (titre, texte, mentions obligatoires) et vous la copiez en un clic, puis vous gardez la trace de ce qui est publié ou retiré." },
   {
     q: "Mes données sont-elles protégées ?",
-    a: "Vos données et celles de vos clients sont hébergées en France, chiffrées, et ne sont jamais revendues.",
+    a: "Les données de chaque agence sont strictement isolées : aucune autre agence ne peut les lire. Elles ne sont jamais revendues. Le détail de l'hébergement et des sous-traitants figurera dans notre politique de confidentialité.",
   },
   {
     q: "Puis-je changer d'offre ou résilier ?",

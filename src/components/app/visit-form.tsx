@@ -58,7 +58,7 @@ export function VisitForm({
             </select>
           </Field>
           <Field label="Date *" htmlFor="date">
-            <input id="date" name="date" type="date" required min={defaults.date} defaultValue={v.date ?? defaults.date} className={input} />
+            <input id="date" name="date" type="date" required defaultValue={v.date ?? defaults.date} className={input} />
           </Field>
           <Field label="Heure *" htmlFor="time">
             <input id="time" name="time" type="time" required step={900} defaultValue={v.time ?? "10:00"} className={input} />

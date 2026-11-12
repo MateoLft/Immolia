@@ -98,7 +98,7 @@ export function PhotoManager({ propertyId, photos }: { propertyId: string; photo
         <label className={clsx("flex h-10 cursor-pointer items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-600", uploading && "pointer-events-none opacity-60")}>
           {uploading ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <ImagePlus aria-hidden className="size-4" />}
           {uploading ? `Envoi ${progress.done}/${progress.total}…` : "Ajouter des photos"}
-          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple className="sr-only" disabled={uploading} onChange={(e) => upload(e.target.files)} />
+          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={uploading} onChange={(e) => upload(e.target.files)} />
         </label>
       </div>
 

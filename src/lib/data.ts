@@ -74,6 +74,7 @@ export const getAccount = cache(async (): Promise<Account> => {
     trialDaysLeft: Math.max(0, Math.ceil(msLeft / 86_400_000)),
     trialDays: TRIAL_DAYS,
     demo: false,
+    inactive: !profile?.agency_id,
     feeText: fee?.fee_text?.trim() || null,
   };
 });
@@ -253,8 +254,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     supabase.from("properties").select("id", count).in("status", ACTIVE_STATUSES),
     supabase.from("properties").select("id", count).eq("status", "a-publier"),
     supabase.from("visits").select("id", count).eq("status", "prevue").gte("starts_at", now.toISOString()).lt("starts_at", in7Days.toISOString()),
-    supabase.from("buyers").select("id", count).in("score", ["prioritaire", "qualifie"]),
-    supabase.from("properties").select("id", count).not("mandate_type", "is", null).gte("created_at", monthStart.toISOString()),
+    supabase.from("buyers").select("id", count).in("score", ["prioritaire", "qualifie"]).eq("status", "actif"),
+    supabase.from("mandates").select("id", count).gte("signed_on", monthStart.toISOString().slice(0, 10)),
   ]);
 
   return {
@@ -274,6 +275,7 @@ type VisitRow = {
   property_id: string;
   voucher_signed_at: string | null;
   feedback?: string | null;
+  notes?: string | null;
   properties: { title: string } | { title: string }[] | null;
   buyers: BuyerJoin | BuyerJoin[] | null;
 };
@@ -291,10 +293,11 @@ function toVisit(r: VisitRow): Visit {
     buyerEmail: buyer?.email ?? null,
     voucherSigned: Boolean(r.voucher_signed_at),
     feedback: r.feedback ?? null,
+    notes: r.notes ?? null,
   };
 }
 
-const VISIT_SELECT = "id, starts_at, status, property_id, voucher_signed_at, feedback, properties(title), buyers(full_name, phone, email)";
+const VISIT_SELECT = "id, starts_at, status, property_id, voucher_signed_at, feedback, notes, properties(title), buyers(full_name, phone, email)";
 
 /** Visites du module Visites : à venir, passées à compléter, réalisées récemment. */
 export async function listVisitsOverview(): Promise<{ upcoming: Visit[]; toComplete: Visit[]; done: Visit[] }> {
@@ -473,7 +476,7 @@ function toBuyer(r: BuyerRow): BuyerFull {
 export async function listBuyersFull(): Promise<BuyerFull[]> {
   if (!isSupabaseConfigured) return [];
   const { supabase } = await getSession();
-  const { data } = await supabase.from("buyers").select("*").order("created_at", { ascending: false }).limit(1000);
+  const data = await fetchAll((from, to) => supabase.from("buyers").select("*").order("created_at", { ascending: false }).order("id").range(from, to));
   return ((data ?? []) as BuyerRow[]).map(toBuyer);
 }
 
@@ -524,7 +527,7 @@ const toSeller = (r: SellerRow): Seller => ({
 export async function listSellers(): Promise<Seller[]> {
   if (!isSupabaseConfigured) return [];
   const { supabase } = await getSession();
-  const { data } = await supabase.from("sellers").select("*").order("full_name").limit(1000);
+  const data = await fetchAll((from, to) => supabase.from("sellers").select("*").order("full_name").order("id").range(from, to));
   return ((data ?? []) as SellerRow[]).map(toSeller);
 }
 
@@ -552,8 +555,8 @@ export async function listPropertyVisits(propertyId: string): Promise<Visit[]> {
 export async function listMandates(): Promise<Mandate[]> {
   if (!isSupabaseConfigured) return [];
   const { supabase } = await getSession();
-  const { data } = await supabase.from("mandates").select("*").order("number", { ascending: false }).limit(5000);
-  return (data ?? []).map((m) => ({
+  const data = await fetchAll((from, to) => supabase.from("mandates").select("*").order("number", { ascending: false }).range(from, to));
+  return data.map((m) => ({
     id: m.id,
     number: m.number,
     propertyId: m.property_id,
@@ -601,8 +604,8 @@ export async function countDocumentsByProperty(): Promise<Map<string, Set<string
   const map = new Map<string, Set<string>>();
   if (!isSupabaseConfigured) return map;
   const { supabase } = await getSession();
-  const { data } = await supabase.from("property_documents").select("property_id, kind").limit(10000);
-  for (const r of data ?? []) {
+  const data = await fetchAll((from, to) => supabase.from("property_documents").select("property_id, kind").order("id").range(from, to));
+  for (const r of data) {
     if (!map.has(r.property_id)) map.set(r.property_id, new Set());
     map.get(r.property_id)!.add(r.kind);
   }
@@ -683,7 +686,7 @@ export async function getVisit(id: string): Promise<VisitDetail | null> {
   const { supabase } = await getSession();
   const { data } = await supabase
     .from("visits")
-    .select("id, starts_at, status, property_id, voucher_signed_at, voucher_signer_name, voucher_signature_path, feedback, properties(title, address, city, property_type), buyers(full_name, phone, email)")
+    .select("id, starts_at, status, property_id, voucher_signed_at, voucher_signer_name, voucher_signature_path, feedback, notes, properties(title, address, city, property_type), buyers(full_name, phone, email)")
     .eq("id", id)
     .maybeSingle();
   if (!data) return null;
@@ -732,33 +735,38 @@ export async function listInvitations(): Promise<Invitation[]> {
   return (data ?? []).map((i) => ({ id: i.id, email: i.email, role: i.role, token: i.token, createdAt: i.created_at, expiresAt: i.expires_at }));
 }
 
-/** Activité de chaque membre (tableau de bord manager). */
+/** Activité de chaque membre (tableau de bord manager), agrégée en SQL. */
 export async function getMemberStats(): Promise<Map<string, MemberStats>> {
   const stats = new Map<string, MemberStats>();
   if (!isSupabaseConfigured) return stats;
   const { supabase } = await getSession();
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const [props, visits, mandates, ai] = await Promise.all([
-    supabase.from("properties").select("agent_id").in("status", ACTIVE_STATUSES).limit(10000),
-    supabase.from("visits").select("agent_id, starts_at, status").gte("starts_at", monthStart).limit(10000),
-    supabase.from("mandates").select("created_by").gte("created_at", monthStart).limit(10000),
-    supabase.from("generated_contents").select("created_by").gte("created_at", monthStart).limit(10000),
-  ]);
-  const get = (id: string | null) => {
-    const key = id ?? "";
-    if (!stats.has(key)) stats.set(key, { properties: 0, upcomingVisits: 0, visitsThisMonth: 0, mandatesThisMonth: 0, aiThisMonth: 0 });
-    return stats.get(key)!;
-  };
-  for (const r of props.data ?? []) get(r.agent_id).properties++;
-  for (const r of visits.data ?? []) {
-    const s = get(r.agent_id);
-    if (r.status === "prevue" && new Date(r.starts_at) > now) s.upcomingVisits++;
-    if (r.status === "realisee") s.visitsThisMonth++;
+  const { data, error } = await supabase.rpc("get_member_stats");
+  if (error) console.error("Statistiques d'équipe indisponibles (migration 0010 appliquée ?)", error.message);
+  for (const r of data ?? []) {
+    stats.set(r.agent_id ?? "", {
+      properties: r.properties,
+      upcomingVisits: r.upcoming_visits,
+      visitsThisMonth: r.visits_month,
+      mandatesThisMonth: r.mandates_month,
+      aiThisMonth: r.ai_month,
+    });
   }
-  for (const r of mandates.data ?? []) get(r.created_by).mandatesThisMonth++;
-  for (const r of ai.data ?? []) get(r.created_by).aiThisMonth++;
   return stats;
+}
+
+/**
+ * Lit toutes les lignes d'une requête par blocs de 1 000 : l'API Supabase
+ * plafonne chaque réponse, une simple `.limit()` tronquerait silencieusement.
+ */
+async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>, max = 50_000): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; from < max; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error || !data) break;
+    out.push(...data);
+    if (data.length < 1000) break;
+  }
+  return out;
 }
 
 function one<T>(value: T | T[] | null | undefined): T | null {

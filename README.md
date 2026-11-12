@@ -38,7 +38,8 @@ Pour activer les comptes :
 | `src/lib/mock-data.ts` | Données d'exemple, en attendant la base de données |
 | `src/lib/supabase` | Connexion à Supabase |
 | `src/proxy.ts` | Protection de l'espace agent (connexion obligatoire) |
-| `supabase/migrations` | Schéma de la base de données et règles de sécurité |
+| `supabase/migrations` | Schéma de la base de données et règles de sécurité (0001 à 0010, à exécuter dans l'ordre) |
+| `tests/db` | Tests de sécurité de la base (`npm test`) : isolation des agences, rôles, quotas, registre des mandats |
 | `src/app/globals.css` | Couleurs et styles du design (tokens) |
 
 ## Feuille de route

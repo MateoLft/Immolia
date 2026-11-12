@@ -10,6 +10,9 @@ import { isAiConfigured } from "@/lib/ai";
 
 export const metadata = { title: "Dossier de vente" };
 
+/** Les actions d'IA de cette page peuvent durer plus longtemps que la valeur par défaut. */
+export const maxDuration = 60;
+
 async function Dossier({ params }: { params: PageProps<"/app/biens/[id]/dossier">["params"] }) {
   const { id } = await params;
   const p = await getProperty(id);

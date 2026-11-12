@@ -8,6 +8,9 @@ import { MAX_AI_PHOTOS, isAiConfigured } from "@/lib/ai";
 
 export const metadata = { title: "Studio IA" };
 
+/** Les actions d'IA de cette page peuvent durer plus longtemps que la valeur par défaut. */
+export const maxDuration = 60;
+
 async function Workspace({ params }: { params: PageProps<"/app/studio/[id]">["params"] }) {
   const { id } = await params;
   const property = await getProperty(id);

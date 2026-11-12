@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { draftEstimationComment } from "@/lib/ai";
+import { consumeAiQuota } from "@/lib/quota";
 import { getEstimationRequest, listProperties } from "@/lib/data";
 import { comparables } from "@/lib/estimation";
 
@@ -59,6 +60,8 @@ export async function draftComment(id: string, priceLow: string, priceHigh: stri
   if (!s) return { ok: false, error: "Indisponible en mode démo ou session expirée." };
   const req = await getEstimationRequest(id);
   if (!req) return { ok: false, error: "Demande introuvable." };
+  const quota = await consumeAiQuota("estimation");
+  if (!quota.ok) return quota;
   const { median, list } = comparables(await listProperties(), req.city, req.kind);
   const n = (v: string) => (v.trim() ? Number(v.replace(/\s/g, "")) || null : null);
   return draftEstimationComment({

@@ -62,7 +62,7 @@ export async function createVisit(_prev: VisitFormState, form: FormData): Promis
     buyer_id: buyerId,
     agent_id: userId,
     starts_at: startsAt,
-    feedback: get("notes") || null,
+    notes: get("notes").slice(0, 2000) || null,
   });
   if (error) return { error: "L'enregistrement de la visite a échoué.", values };
 
@@ -77,7 +77,9 @@ export async function setVisitStatus(id: string, status: "realisee" | "annulee",
   const s = await session();
   if (!s) return { ok: false, error: "Indisponible en mode démo ou session expirée." };
   const update: Record<string, unknown> = { status };
-  if (feedback !== undefined) update.feedback = feedback.trim().slice(0, 4000) || null;
+  // Un compte rendu vide ne doit jamais effacer un compte rendu existant.
+  const report = feedback?.trim().slice(0, 4000);
+  if (report) update.feedback = report;
   const { error } = await s.supabase.from("visits").update(update).eq("id", id);
   if (error) return { ok: false, error: "La mise à jour a échoué." };
   revalidatePath("/app/visites");

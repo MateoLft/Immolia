@@ -11,6 +11,9 @@ import { formatEuros, formatNumber, kindLabel, STATUS_LABEL } from "@/lib/proper
 
 export const metadata = { title: "Estimation" };
 
+/** Les actions d'IA de cette page peuvent durer plus longtemps que la valeur par défaut. */
+export const maxDuration = 60;
+
 async function Detail({ params }: { params: PageProps<"/app/estimations/[id]">["params"] }) {
   const { id } = await params;
   const r = await getEstimationRequest(id);

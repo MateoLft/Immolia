@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAccount, getProperty, listPropertyPhotos } from "@/lib/data";
 import { MAX_AI_PHOTOS, generatePropertyContent } from "@/lib/ai";
+import { consumeAiQuota } from "@/lib/quota";
 import { isContentKind, isTone, type GeneratedContent } from "@/lib/studio";
 
 export type GenerateResult =
@@ -17,6 +18,9 @@ export async function generateContent(propertyId: string, kind: string, tone: st
   const property = await getProperty(propertyId);
   if (!property) return { ok: false, error: "Bien introuvable." };
   const account = await getAccount();
+
+  const quota = await consumeAiQuota("studio");
+  if (!quota.ok) return quota;
 
   const photoUrls = usePhotos ? (await listPropertyPhotos(property.id)).slice(0, MAX_AI_PHOTOS).map((p) => p.url) : [];
 

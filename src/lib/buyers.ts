@@ -57,8 +57,16 @@ export function matches(b: BuyerFull, p: Property) {
   if (b.minSurface && p.surface && p.surface < b.minSurface) return false;
   if (b.minRooms && p.rooms && p.rooms < b.minRooms) return false;
   if (b.cities.length > 0) {
-    const place = norm(`${p.city} ${p.postalCode ?? ""}`);
-    if (!b.cities.some((c) => place.includes(norm(c)))) return false;
+    const words = new Set(norm(`${p.city} ${p.postalCode ?? ""}`).split(" "));
+    const postal = p.postalCode ?? "";
+    // Mots entiers uniquement (« lyon 1 » ne correspond plus à « lyon 10 ») ; un nombre seul est un code postal ou un département.
+    const found = b.cities.some((c) => {
+      const n = norm(c);
+      if (!n) return false;
+      if (/^\d{2,5}$/.test(n)) return postal.startsWith(n);
+      return n.split(" ").every((w) => words.has(w));
+    });
+    if (!found) return false;
   }
   return true;
 }

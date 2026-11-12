@@ -81,11 +81,8 @@ export async function setCoverPhoto(photoId: string): Promise<Result> {
   const { data: photo } = await supabase.from("property_photos").select("id, property_id").eq("id", photoId).maybeSingle();
   if (!photo) return { ok: false, error: "Photo introuvable." };
 
-  const { data: all } = await supabase.from("property_photos").select("id").eq("property_id", photo.property_id).order("position");
-  const ordered = [photoId, ...(all ?? []).map((p) => p.id).filter((id) => id !== photoId)];
-
-  const results = await Promise.all(ordered.map((id, position) => supabase.from("property_photos").update({ position }).eq("id", id)));
-  if (results.some((r) => r.error)) return { ok: false, error: "Le changement de photo principale a échoué." };
+  const { error } = await supabase.rpc("set_cover_photo", { p_photo: photoId });
+  if (error) return { ok: false, error: "Le changement de photo principale a échoué." };
 
   revalidatePath(`/app/biens/${photo.property_id}`);
   return { ok: true };

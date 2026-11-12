@@ -98,6 +98,8 @@ export type Visit = {
   buyerEmail?: string | null;
   voucherSigned: boolean;
   feedback?: string | null;
+  /** Notes de préparation saisies à la planification. */
+  notes?: string | null;
 };
 
 export type VisitRequest = {
@@ -137,6 +139,8 @@ export type Account = {
   trialDaysLeft: number;
   trialDays: number;
   demo: boolean;
+  /** Compte sans agence active (membre désactivé). */
+  inactive: boolean;
   /** Mention honoraires par défaut (Paramètres), sinon null. */
   feeText: string | null;
 };
