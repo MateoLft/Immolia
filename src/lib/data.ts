@@ -276,6 +276,8 @@ type VisitRow = {
   voucher_signed_at: string | null;
   feedback?: string | null;
   notes?: string | null;
+  email_count?: number | null;
+  last_email_at?: string | null;
   properties: { title: string } | { title: string }[] | null;
   buyers: BuyerJoin | BuyerJoin[] | null;
 };
@@ -294,10 +296,12 @@ function toVisit(r: VisitRow): Visit {
     voucherSigned: Boolean(r.voucher_signed_at),
     feedback: r.feedback ?? null,
     notes: r.notes ?? null,
+    emailCount: r.email_count ?? 0,
+    lastEmailAt: r.last_email_at ?? null,
   };
 }
 
-const VISIT_SELECT = "id, starts_at, status, property_id, voucher_signed_at, feedback, notes, properties(title), buyers(full_name, phone, email)";
+const VISIT_SELECT = "id, starts_at, status, property_id, voucher_signed_at, feedback, notes, email_count, last_email_at, properties(title), buyers(full_name, phone, email)";
 
 /** Visites du module Visites : à venir, passées à compléter, réalisées récemment. */
 export async function listVisitsOverview(): Promise<{ upcoming: Visit[]; toComplete: Visit[]; done: Visit[] }> {

@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { VisitForm } from "@/components/app/visit-form";
 import { getVisitRequest, listBuyers, listProperties } from "@/lib/data";
 import { parisToday } from "@/lib/paris-time";
+import { isEmailConfigured } from "@/lib/email";
 
 export const metadata = { title: "Planifier une visite" };
 
@@ -29,6 +30,7 @@ async function Form({ searchParams }: { searchParams: PageProps<"/app/visites/no
         </p>
       ) : (
         <VisitForm
+          emailEnabled={isEmailConfigured()}
           properties={properties.map((p) => ({ id: p.id, title: p.title, city: p.city }))}
           buyers={buyers}
           defaults={{

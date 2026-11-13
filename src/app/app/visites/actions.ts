@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { parisToIso } from "@/lib/paris-time";
 import { FINANCING_OPTIONS } from "@/lib/property-types";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { visitIcs } from "@/lib/ics";
+import { buildVisitEmail, whenLabel } from "@/lib/visit-email";
 
 export type VisitFormState = { error?: string; values?: Record<string, string> };
 type Result = { ok: true } | { ok: false; error: string };
@@ -18,6 +21,95 @@ async function session() {
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
   return userId ? { supabase, userId } : null;
+}
+
+type Supabase = NonNullable<Awaited<ReturnType<typeof session>>>["supabase"];
+type One<T> = T | T[] | null;
+const first = <T,>(v: One<T>): T | null => (Array.isArray(v) ? (v[0] ?? null) : v);
+
+/**
+ * Envoie à l'acquéreur la confirmation (premier envoi) ou un rappel (envois suivants),
+ * avec une invitation de calendrier. Les réponses de l'acquéreur arrivent chez l'agent.
+ */
+async function deliverVisitEmail(supabase: Supabase, visitId: string): Promise<{ ok: true; kind: "confirmation" | "rappel" } | { ok: false; error: string; code: "config" | "sans-email" | "quota" | "echec" }> {
+  if (!isEmailConfigured()) return { ok: false, code: "config", error: "L'envoi d'e-mails n'est pas encore configuré." };
+
+  const { data: v } = await supabase
+    .from("visits")
+    .select("id, starts_at, status, last_email_at, email_count, buyers(full_name, email), properties(title, address, city)")
+    .eq("id", visitId)
+    .maybeSingle();
+  if (!v) return { ok: false, code: "echec", error: "Visite introuvable." };
+  if (v.status !== "prevue") return { ok: false, code: "echec", error: "Seules les visites à venir peuvent être confirmées." };
+  const buyer = first(v.buyers as One<{ full_name: string; email: string | null }>);
+  const property = first(v.properties as One<{ title: string; address: string | null; city: string }>);
+  if (!buyer?.email) return { ok: false, code: "sans-email", error: "Cet acquéreur n'a pas d'adresse e-mail." };
+  if (!property) return { ok: false, code: "echec", error: "Bien introuvable." };
+  if (v.last_email_at && Date.now() - new Date(v.last_email_at).getTime() < 60_000) {
+    return { ok: false, code: "echec", error: "Un e-mail vient d'être envoyé pour cette visite. Patientez une minute." };
+  }
+
+  const [{ data: profile }, { data: auth }] = await Promise.all([
+    supabase.from("profiles").select("full_name, phone, agencies(name)").eq("id", (await supabase.auth.getClaims()).data?.claims?.sub ?? "").maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
+  const agency = first(profile?.agencies as One<{ name: string }>);
+
+  const quota = await supabase.rpc("consume_email_quota");
+  if (quota.error) {
+    console.error("Plafond d'e-mails indisponible (migration 0011 appliquée ?)", quota.error.message);
+    return { ok: false, code: "echec", error: "L'envoi d'e-mails n'est pas encore disponible." };
+  }
+  if (quota.data !== "ok") {
+    return { ok: false, code: "quota", error: quota.data === "mois" ? "Limite mensuelle d'e-mails atteinte pour votre agence." : "Limite quotidienne d'e-mails atteinte pour votre agence. Réessayez demain." };
+  }
+
+  const kind = (v.email_count ?? 0) === 0 ? ("confirmation" as const) : ("rappel" as const);
+  const startsAt = new Date(v.starts_at);
+  const agentName = profile?.full_name?.trim() || "Votre conseiller";
+  const mail = buildVisitEmail({
+    kind,
+    buyerName: buyer.full_name,
+    propertyTitle: property.title,
+    propertyAddress: property.address,
+    city: property.city,
+    startsAt,
+    agentName,
+    agentPhone: profile?.phone?.trim() || null,
+    agencyName: agency?.name ?? "",
+  });
+  const ics = visitIcs({
+    uid: v.id,
+    startsAt,
+    summary: `Visite : ${property.title}`,
+    location: [property.address, property.city].filter(Boolean).join(", "),
+    description: `Visite avec ${agentName}${agency?.name ? ` (${agency.name})` : ""} — ${whenLabel(startsAt)}`,
+  });
+
+  const sent = await sendEmail({
+    to: buyer.email,
+    fromName: agency?.name ? `${agentName} · ${agency.name}` : agentName,
+    replyTo: auth.user?.email ?? null,
+    subject: mail.subject,
+    text: mail.text,
+    html: mail.html,
+    attachments: [{ filename: "visite.ics", content: Buffer.from(ics, "utf8").toString("base64") }],
+  });
+  if (!sent.ok) return { ok: false, code: "echec", error: sent.error };
+
+  await supabase.from("visits").update({ last_email_at: new Date().toISOString(), email_count: (v.email_count ?? 0) + 1 }).eq("id", visitId);
+  return { ok: true, kind };
+}
+
+/** Bouton « Envoyer la confirmation / un rappel » de la liste des visites. */
+export async function sendVisitEmail(id: string): Promise<Result> {
+  const s = await session();
+  if (!s) return { ok: false, error: "Indisponible en mode démo ou session expirée." };
+  if (!isUuid(id)) return { ok: false, error: "Visite introuvable." };
+  const res = await deliverVisitEmail(s.supabase, id);
+  if (!res.ok) return { ok: false, error: res.error };
+  revalidatePath("/app/visites");
+  return { ok: true };
 }
 
 export async function createVisit(_prev: VisitFormState, form: FormData): Promise<VisitFormState> {
@@ -57,20 +149,30 @@ export async function createVisit(_prev: VisitFormState, form: FormData): Promis
     buyerId = buyer.id;
   }
 
-  const { error } = await supabase.from("visits").insert({
-    property_id: propertyId,
-    buyer_id: buyerId,
-    agent_id: userId,
-    starts_at: startsAt,
-    notes: get("notes").slice(0, 2000) || null,
-  });
-  if (error) return { error: "L'enregistrement de la visite a échoué.", values };
+  const { data: created, error } = await supabase
+    .from("visits")
+    .insert({
+      property_id: propertyId,
+      buyer_id: buyerId,
+      agent_id: userId,
+      starts_at: startsAt,
+      notes: get("notes").slice(0, 2000) || null,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return { error: "L'enregistrement de la visite a échoué.", values };
 
   const requestId = get("request_id");
   if (isUuid(requestId)) {
     await supabase.from("visit_requests").update({ status: "planifiee", buyer_id: buyerId }).eq("id", requestId);
   }
-  redirect("/app/visites");
+  // La visite est enregistrée : un échec d'e-mail ne doit jamais l'annuler, on le signale seulement.
+  let envoi = "";
+  if (get("send_confirmation") === "on") {
+    const res = await deliverVisitEmail(supabase, created.id);
+    envoi = res.ok ? "ok" : res.code;
+  }
+  redirect(envoi ? `/app/visites?envoi=${envoi}` : "/app/visites");
 }
 
 export async function setVisitStatus(id: string, status: "realisee" | "annulee", feedback?: string): Promise<Result> {

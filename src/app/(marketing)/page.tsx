@@ -17,7 +17,7 @@ const TRUST = [
 const FAQ = [
   {
     q: "Puis-je importer mes biens depuis mon logiciel actuel ?",
-    a: "L'import automatique est en préparation. En attendant, créer un bien prend quelques minutes, et l'IA rédige l'annonce à partir de ses caractéristiques et de ses photos.",
+    a: "Oui, depuis un fichier CSV (export Excel ou de votre logiciel actuel) : Immolia reconnaît les colonnes, vous montre un aperçu et ne crée pas de doublons si vous relancez l'import. Les photos s'ajoutent ensuite bien par bien.",
   },
   { q: "Les annonces sont-elles diffusées sur les portails ?", a: "Pas de diffusion automatique pour l'instant : Immolia prépare l'annonce aux limites de chaque portail (titre, texte, mentions obligatoires) et vous la copiez en un clic, puis vous gardez la trace de ce qui est publié ou retiré." },
   {

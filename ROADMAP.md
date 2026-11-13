@@ -81,7 +81,8 @@ Légende : ✅ fait · 🟡 interface prête (données d'exemple) · ⬜ à fair
 - Mentions légales, politique de confidentialité, CGV (à faire valider par un juriste)
 - Hébergement des données en France et conformité RGPD (annoncés sur le site)
 - Corriger la FAQ si de vrais flux de diffusion vers les portails sont ajoutés (aujourd'hui : diffusion assistée)
-- Import de biens depuis un fichier (la page d'accueil indique « en préparation »)
+- Import des acquéreurs et des vendeurs depuis un fichier (l'import des biens existe déjà)
+- E-mails automatiques de rappel la veille d'une visite (aujourd'hui : envoi manuel d'un rappel, planification d'envois à ajouter)
 - Stripe, abonnements, essai qui expire, quotas par offre (le plafond IA actuel est commun à toutes les agences)
 - Supervision des erreurs (Sentry), SMTP dédié, sauvegardes (Supabase Pro), région UE
 - Hébergement de production : l'offre gratuite de Vercel (Hobby) est réservée à un usage non commercial,

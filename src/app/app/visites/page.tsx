@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArchiveRequestButton, CompleteVisitForm, UpcomingVisitActions } from "@/components/app/visit-actions";
 import { getAccount, listNewVisitRequests, listVisitsOverview } from "@/lib/data";
 import { SendProperty } from "@/components/app/send-property";
+import { isEmailConfigured } from "@/lib/email";
 import type { Visit } from "@/lib/property-types";
 
 export const metadata = { title: "Visites" };
@@ -72,6 +73,7 @@ async function Requests() {
 
 async function Overview() {
   const [{ upcoming, toComplete, done }, account] = await Promise.all([listVisitsOverview(), getAccount()]);
+  const emailEnabled = isEmailConfigured();
   const reminder = (v: Visit) =>
     `Bonjour${v.buyerName ? ` ${v.buyerName.split(/\s+/)[0]}` : ""},\n\nJe vous confirme notre visite de « ${v.propertyTitle} » ${dayFmt.format(new Date(v.startsAt))} à ${timeFmt.format(new Date(v.startsAt))}.\n\nÀ bientôt,\n${account.fullName} – ${account.agencyName}`;
 
@@ -117,7 +119,7 @@ async function Overview() {
                 {visits.map((v) => (
                   <VisitLine key={v.id} v={v}>
                     <div className="flex flex-col gap-2 sm:items-end">
-                      <UpcomingVisitActions id={v.id} voucherSigned={v.voucherSigned} />
+                      <UpcomingVisitActions id={v.id} voucherSigned={v.voucherSigned} email={emailEnabled && v.buyerEmail ? { count: v.emailCount ?? 0, lastAt: v.lastEmailAt ?? null } : undefined} />
                       <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
                         Rappel :
                         <SendProperty email={v.buyerEmail ?? null} phone={v.buyerPhone ?? null} subject={`Confirmation de visite : ${v.propertyTitle}`} message={reminder(v)} />
@@ -150,7 +152,26 @@ async function Overview() {
   );
 }
 
-export default function VisitsPage() {
+const ENVOI: Record<string, { tone: "ok" | "warn"; text: string }> = {
+  ok: { tone: "ok", text: "Visite planifiée. La confirmation a été envoyée à l'acquéreur avec une invitation de calendrier." },
+  "sans-email": { tone: "warn", text: "Visite planifiée. Aucun e-mail envoyé : cet acquéreur n'a pas d'adresse e-mail." },
+  config: { tone: "warn", text: "Visite planifiée. L'envoi d'e-mails n'est pas encore configuré." },
+  quota: { tone: "warn", text: "Visite planifiée. La confirmation n'a pas été envoyée : limite d'e-mails atteinte pour votre agence." },
+  echec: { tone: "warn", text: "Visite planifiée, mais l'e-mail de confirmation n'a pas pu être envoyé. Vous pouvez le renvoyer depuis la liste." },
+};
+
+async function SendNotice({ searchParams }: { searchParams: PageProps<"/app/visites">["searchParams"] }) {
+  const { envoi } = await searchParams;
+  const notice = typeof envoi === "string" ? ENVOI[envoi] : undefined;
+  if (!notice) return null;
+  return (
+    <p role="status" className={notice.tone === "ok" ? "rounded-lg bg-success-50 px-4 py-3 text-sm text-success-700" : "rounded-lg bg-warning-50 px-4 py-3 text-sm text-warning-700"}>
+      {notice.text}
+    </p>
+  );
+}
+
+export default function VisitsPage({ searchParams }: PageProps<"/app/visites">) {
   return (
     <div className="flex flex-col gap-6 px-5 py-7 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -160,6 +181,9 @@ export default function VisitsPage() {
         </div>
         <ButtonLink href="/app/visites/nouvelle"><CalendarPlus aria-hidden className="size-4" />Planifier une visite</ButtonLink>
       </div>
+      <Suspense>
+        <SendNotice searchParams={searchParams} />
+      </Suspense>
       <Suspense fallback={<Skeleton className="h-32 w-full" />}>
         <Requests />
       </Suspense>

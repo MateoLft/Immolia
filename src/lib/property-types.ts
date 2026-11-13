@@ -100,6 +100,9 @@ export type Visit = {
   feedback?: string | null;
   /** Notes de préparation saisies à la planification. */
   notes?: string | null;
+  /** Nombre d'e-mails envoyés à l'acquéreur pour cette visite, et date du dernier. */
+  emailCount?: number;
+  lastEmailAt?: string | null;
 };
 
 export type VisitRequest = {

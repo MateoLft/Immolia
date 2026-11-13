@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, X } from "lucide-react";
-import { archiveVisitRequest, setVisitStatus, setVoucherSigned } from "@/app/app/visites/actions";
+import { Check, Loader2, Mail, X } from "lucide-react";
+import { archiveVisitRequest, sendVisitEmail, setVisitStatus, setVoucherSigned } from "@/app/app/visites/actions";
 
 const btn = "flex h-9 items-center gap-1.5 rounded-lg border border-line-strong bg-white px-3 text-sm font-semibold text-body shadow-xs hover:bg-canvas disabled:opacity-60";
 
@@ -21,10 +21,35 @@ function useAction() {
   return { pending, error, run };
 }
 
-export function UpcomingVisitActions({ id, voucherSigned }: { id: string; voucherSigned: boolean }) {
+const sentFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+
+export function UpcomingVisitActions({
+  id,
+  voucherSigned,
+  email,
+}: {
+  id: string;
+  voucherSigned: boolean;
+  /** Présent seulement si l'envoi d'e-mails est configuré et que l'acquéreur a une adresse. */
+  email?: { count: number; lastAt: string | null };
+}) {
   const { pending, error, run } = useAction();
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {email && (
+        <button
+          type="button"
+          className={btn}
+          disabled={pending}
+          onClick={() => {
+            if (email.count === 0 || confirm("Envoyer un rappel à l'acquéreur ?")) run(() => sendVisitEmail(id));
+          }}
+        >
+          {pending ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Mail aria-hidden className="size-4" />}
+          {email.count === 0 ? "Envoyer la confirmation" : "Envoyer un rappel"}
+        </button>
+      )}
+      {email?.lastAt && <span className="text-[13px] text-subtle">Dernier e-mail : {sentFmt.format(new Date(email.lastAt))}</span>}
       <a href={`/app/visites/${id}/bon`} className={btn}>{voucherSigned ? "Bon signé" : "Faire signer le bon"}</a>
       <label className="flex h-9 items-center gap-2 text-sm text-body">
         <input

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Plus } from "lucide-react";
+import { FileUp, Plus } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,10 @@ export default function PropertiesPage() {
             </Suspense>
           </p>
         </div>
-        <ButtonLink href="/app/biens/nouveau"><Plus aria-hidden className="size-4" strokeWidth={2.4} />Nouveau bien</ButtonLink>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href="/app/biens/import" variant="secondary"><FileUp aria-hidden className="size-4" />Importer (CSV)</ButtonLink>
+          <ButtonLink href="/app/biens/nouveau"><Plus aria-hidden className="size-4" strokeWidth={2.4} />Nouveau bien</ButtonLink>
+        </div>
       </div>
       <Card className="overflow-hidden">
         <Suspense

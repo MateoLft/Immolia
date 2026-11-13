@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { parseImport } from "../../src/lib/csv-import.ts";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../supabase/migrations");
 const A = "aaaaaaaa-0000-0000-0000-000000000001";
@@ -149,4 +150,33 @@ test("visites : les notes de préparation ne sont plus écrasées par le compte 
   const v = await one(`select notes, feedback from visits where id='${id}'`);
   assert.equal(v.notes, "Clés chez le gardien");
   assert.equal(v.feedback, "Très intéressé");
+});
+
+test("e-mails : plafond propre, indépendant de celui de l'IA, par agence", async () => {
+  for (let i = 0; i < 40; i++) assert.equal((await as(B, `select public.consume_email_quota() r`)).rows[0].r, "ok");
+  assert.equal((await as(B, `select public.consume_email_quota() r`)).rows[0].r, "jour");
+  // l'IA de la même agence n'est pas bloquée par les e-mails
+  assert.equal((await as(B, `select public.consume_ai_quota('studio') r`)).rows[0].r, "ok");
+  // l'agence A n'est pas touchée
+  assert.equal((await as(A2, `select public.consume_email_quota() r`)).rows[0].r, "ok");
+  const anon = await as("", `select public.consume_email_quota() r`).then((r) => r.rows[0].r, () => "refuse");
+  assert.equal(anon, "refuse");
+});
+
+test("import CSV : le fichier modèle est accepté par la base, dans l'agence de l'utilisateur", async () => {
+  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../public/modele-import-biens.csv");
+  const parsed = parseImport(fs.readFileSync(file, "utf8"));
+  assert.equal(parsed.rows.length, 2);
+  await db.exec(`reset role; select set_config('test.uid','${A}',false); set role authenticated;`);
+  try {
+    for (const row of parsed.rows) {
+      const cols = Object.keys(row).filter((c) => c !== "line");
+      const marks = cols.map((_, i) => "$" + (i + 1)).join(", ");
+      await db.query(`insert into properties (agent_id, ${cols.join(", ")}) values ('${A}', ${marks})`, cols.map((c) => row[c]));
+    }
+  } finally {
+    await db.exec("reset role;");
+  }
+  const n = (await one(`select count(*)::int n from properties where agency_id='${agA}' and reference in ('LY-0001','BX-0002')`)).n;
+  assert.equal(n, 2);
 });

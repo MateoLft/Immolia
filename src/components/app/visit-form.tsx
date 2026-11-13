@@ -28,14 +28,18 @@ export type VisitFormDefaults = {
   date: string;
 };
 
+
 export function VisitForm({
   properties,
   buyers,
   defaults,
+  emailEnabled = false,
 }: {
   properties: { id: string; title: string; city: string }[];
   buyers: Buyer[];
   defaults: VisitFormDefaults;
+  /** L'envoi d'e-mails est configuré : propose d'envoyer la confirmation à l'acquéreur. */
+  emailEnabled?: boolean;
 }) {
   const [state, action, pending] = useActionState<VisitFormState, FormData>(createVisit, {});
   const v = state.values ?? {};
@@ -117,6 +121,16 @@ export function VisitForm({
           )}
         </div>
       </fieldset>
+
+      {emailEnabled && (
+        <label className="flex items-start gap-3 rounded-xl border border-line bg-white p-4 text-sm shadow-card">
+          <input type="checkbox" name="send_confirmation" defaultChecked={v.send_confirmation !== undefined ? v.send_confirmation === "on" : true} className="mt-0.5 size-4 accent-brand-600" />
+          <span>
+            <span className="font-semibold text-ink">Envoyer la confirmation à l&apos;acquéreur par e-mail</span>
+            <span className="block text-muted">Avec une invitation de calendrier. Ignoré si l&apos;acquéreur n&apos;a pas d&apos;adresse e-mail.</span>
+          </span>
+        </label>
+      )}
 
       {state.error && <p role="alert" className="rounded-lg bg-danger-50 px-4 py-3 text-sm text-danger-700">{state.error}</p>}
 
